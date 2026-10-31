@@ -37,13 +37,17 @@
   - [Why IDORaider Exists](#why-idoraider-exists)
   - [How Detection Works](#how-detection-works)
 - [Quick Start](#quick-start)
-  - [Installation](#installation)
-  - [Single-Token Scanning](#single-token-mode-id-enumeration)
-  - [Dual-Token BOLA Replay](#dual-token-mode-owner-vs-other--recommended)
+  - [Installation & Build](#1-installation--build)
+  - [Usage Examples](#2-usage-examples)
+    - [Single-Token Scanning](#single-token-mode-id-enumeration)
+    - [Dual-Token BOLA Replay](#dual-token-mode-owner-vs-other--recommended)
+    - [Proxy & Burp Suite](#routing-through-burp-suite--owasp-zap)
 - [Key Capabilities](#key-capabilities)
+- [Terminal Output Preview](#terminal-output-preview)
 - [CLI Reference](#cli-reference)
 - [Writing Scan Templates](#writing-scan-templates)
   - [Template Syntax](#template-syntax)
+  - [Condition & Matching Logic](#condition--matching-logic)
   - [Included Starter Templates](#included-starter-templates)
 - [Architecture & Replay Flow](#architecture--replay-flow)
 - [Reporting](#reporting)
@@ -154,6 +158,48 @@ Inspect all outbound probes directly in your interception proxy:
 
 ---
 
+## Terminal Output Preview
+
+```text
+ ██╗██████╗  ██████╗ ██████╗  █████╗ ██╗██████╗ ███████╗██████╗ 
+ ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██║██╔══██╗██╔════╝██╔══██╗
+ ██║██║  ██║██║   ██║██████╔╝███████║██║██║  ██║█████╗  ██████╔╝
+ ██║██║  ██║██║   ██║██╔══██╗██╔══██║██║██║  ██║██╔══╝  ██╔══██╗
+ ██║██████╔╝╚██████╔╝██║  ██║██║  ██║██║██████╔╝███████╗██║  ██║
+ ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝
+
+       HUNTING BROKEN ACCESS CONTROL                      v1.0.0
+
+  Go-based BOLA/IDOR Vulnerability Scanner
+  Author      : Jojin John
+  Language    : Go
+  Purpose     : Find IDOR / BOLA vulnerabilities
+  Mode        : Template-based scanning
+  Target      : https://api.target.com
+  Templates   : templates/
+  Concurrency : 20
+  Time        : 2026-10-31 16:30:00
+
+[16:30:00] [INF] Loaded 10 YAML templates from templates/
+[16:30:00] [INF] Target: https://api.target.com
+[16:30:00] [INF] Concurrency: 20 workers
+[16:30:00] [INF] Beginning scan...
+
+PROGRESS   #     CODE   STATUS           SEVERITY     ENDPOINT                                           RESULT
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+[1/42]     1     200    VULNERABLE       CRITICAL     https://api.target.com/api/v1/users/2              HTTP 200: Resource id=2 accessible with sensitive keywords
+[2/42]     2     403    RESTRICTED       -            https://api.target.com/api/v1/admin/2              HTTP 403: Forbidden (access restricted)
+[3/42]     3     404    NOT FOUND        -            https://api.target.com/api/v1/invoices/999         HTTP 404: Endpoint not found
+──────────────────────────────────────────────────────────────────────
+✓ Scan completed in 1.42s
+  42 endpoints tested   1 vulnerable   1 critical   0 high   0 medium   0 low   41 not vulnerable
+──────────────────────────────────────────────────────────────────────
+[16:30:02] [INF] JSON report: results/2026-10-31_163002.json
+[16:30:02] [INF] Markdown report: results/2026-10-31_163002.md
+```
+
+---
+
 ## CLI Reference
 
 | Flag | Default | Description |
@@ -167,7 +213,7 @@ Inspect all outbound probes directly in your interception proxy:
 | `--auth-scheme` | `Bearer` | Prefix before the token (`""` for raw token/cookies) |
 | `-H`, `--header` | — | Custom HTTP request header (`'Key: Value'`), repeatable |
 | `-x`, `--proxy` | — | HTTP/HTTPS/SOCKS5 proxy (e.g. `http://127.0.0.1:8080`) |
-| `-k`, `--insecure` | `false` | Skip TLS certificate verification |
+| `-k`, `--insecure` | `false` | Skip TLS certificate verification (useful for Burp Suite) |
 | `--follow-redirects` | `false` | Follow HTTP redirects (default false to prevent false positives) |
 | `-d`, `--delay` | `0s` | Delay between requests for rate limiting (e.g. `50ms`, `1s`) |
 | `--ids` | — | Comma-separated list of IDs to probe, overriding template defaults |
@@ -183,7 +229,7 @@ Inspect all outbound probes directly in your interception proxy:
 
 ## Writing Scan Templates
 
-Templates are defined in readable YAML files located in `templates/*.yaml`.
+Templates are defined in readable YAML files located in `templates/*.yaml`. Zero external YAML dependencies are required — IDORaider includes a fast, native parser.
 
 ### Template Syntax
 
@@ -204,15 +250,27 @@ ids:
   - 123
 match_status:
   - 200
+match_not_status:
+  - 401
+  - 403
+  - 404
+match_condition: all
 match_words:
   - email
   - username
 ```
 
-* `path`: `{id}` is replaced with each item in `ids` (or values passed via `--ids`).
-* `headers`: `{token}` is replaced with the active token during replay.
-* `match_status`: Status codes considered an accessible response.
-* `match_words`: Optional keywords that must appear in the body to verify data exposure.
+### Condition & Matching Logic
+
+| Field | Type | Description |
+|---|---|---|
+| `path` | `string` | Target endpoint path. `{id}` is replaced with candidate IDs. |
+| `headers` | `map` | Request headers. `{token}` is dynamically substituted with the active replay token. |
+| `ids` | `list` | Candidate ID values to substitute into `{id}`. |
+| `match_status` | `list[int]` | HTTP status codes considered an accessible response (default: `[200]`). |
+| `match_not_status` | `list[int]` | HTTP status codes considered restricted/non-vulnerable (negative match). |
+| `match_condition` | `string` | Keyword evaluation mode: `any` (default, matches if ANY keyword is found) or `all` (requires ALL keywords). |
+| `match_words` | `list[string]` | Substrings that must appear in the response body to confirm data exposure. |
 
 ### Included Starter Templates
 
@@ -283,11 +341,13 @@ This project is governed by the [Contributor Covenant Code of Conduct](CODE_OF_C
 
 ## Developer
 
-Developed with ❤️ by **JOJIN JOHN**.
-
-* **Author:** Jojin John
-* **GitHub:** [@jojin1709](https://github.com/jojin1709)
-* **Project:** [IDORaider](https://github.com/jojin1709/idoraider)
+<p align="left">
+  <img src="./assets/icon.png" width="68" height="71" alt="IDORaider Icon" align="left" style="margin-right: 16px; border-radius: 12px;">
+  <strong>Developed with ❤️ by JOJIN JOHN.</strong><br>
+  Security Researcher & Software Engineer<br>
+  GitHub: <a href="https://github.com/jojin1709">@jojin1709</a> &bull; Project: <a href="https://github.com/jojin1709/idoraider">IDORaider</a>
+</p>
+<br clear="left">
 
 ---
 
