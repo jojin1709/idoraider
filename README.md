@@ -404,7 +404,7 @@ This project is governed by the [Contributor Covenant Code of Conduct](CODE_OF_C
 ## Developer
 
 <p align="left">
-  <img src="./assets/icon.png" width="68" height="71" alt="IDORaider Icon" align="left" style="margin-right: 16px; border-radius: 12px;">
+  <img src="./assets/icon.png" width="68" height="68" alt="IDORaider Icon" align="left" style="margin-right: 16px; border-radius: 12px;">
   <strong>Developed with ❤️ by JOJIN JOHN.</strong><br>
   Security Researcher & Software Engineer<br>
   GitHub: <a href="https://github.com/jojin1709">@jojin1709</a> &bull; Project: <a href="https://github.com/jojin1709/idoraider">IDORaider</a>
