@@ -73,8 +73,8 @@
 
   <!-- Top Announcement Bar -->
   <div class="bg-zinc-900 border-b border-zinc-800 text-xs text-zinc-300 py-2 px-4 text-center">
-    <span>IDORaider v1.0.0 is officially released &bull;</span>
-    <a href="https://github.com/jojin1709/idoraider/releases/tag/v1.0.0" target="_blank" class="font-medium text-white hover:underline ml-1 inline-flex items-center gap-1">
+    <span>IDORaider v1.1.0 is officially released &bull;</span>
+    <a href="https://github.com/jojin1709/idoraider/releases/tag/v1.1.0" target="_blank" class="font-medium text-white hover:underline ml-1 inline-flex items-center gap-1">
       Download pre-compiled binaries <span aria-hidden="true">&rarr;</span>
     </a>
   </div>
@@ -87,7 +87,7 @@
         <a href="#" class="font-semibold text-lg tracking-tight text-white flex items-center gap-2">
           <span>IDORaider</span>
         </a>
-        <span class="text-xs px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 font-mono">v1.0.0</span>
+        <span class="text-xs px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 font-mono">v1.1.0</span>
       </div>
 
       <nav class="hidden md:flex items-center gap-6 text-sm text-zinc-400">
@@ -433,6 +433,12 @@
             <button onclick="pickTmpl('order')" class="spec-btn w-full text-left px-4 py-3 rounded-lg border border-zinc-800/60 bg-zinc-950 text-zinc-400 hover:text-white text-xs font-mono" data-id="order">
               idor-order-access.yaml
             </button>
+            <button onclick="pickTmpl('delete')" class="spec-btn w-full text-left px-4 py-3 rounded-lg border border-zinc-800/60 bg-zinc-950 text-zinc-400 hover:text-white text-xs font-mono" data-id="delete">
+              idor-delete.yaml
+            </button>
+            <button onclick="pickTmpl('reset')" class="spec-btn w-full text-left px-4 py-3 rounded-lg border border-zinc-800/60 bg-zinc-950 text-zinc-400 hover:text-white text-xs font-mono" data-id="reset">
+              idor-password-reset.yaml
+            </button>
           </div>
 
           <!-- Code viewer -->
@@ -698,11 +704,53 @@ match_status:
   - 200
 match_words:
   - order_id
-  - shipping_address`
+  - shipping_address`,
+
+      delete: `id: idor-delete
+name: Unauthorized Deletion IDOR
+severity: critical
+description: Unauthorized deletion of arbitrary user resources
+method: DELETE
+path: /api/v1/items/{id}
+headers:
+  Authorization: Bearer {token}
+ids:
+  - 10
+  - 11
+match_status:
+  - 200
+  - 204
+match_not_status:
+  - 401
+  - 403`,
+
+      reset: `id: idor-password-reset
+name: Account Takeover Password Reset IDOR
+severity: critical
+description: Trigger unauthorized password resets for other accounts
+method: POST
+path: /api/v1/users/{id}/reset-password
+headers:
+  Authorization: Bearer {token}
+  Content-Type: application/json
+ids:
+  - 1
+  - 2
+match_status:
+  - 200
+match_not_status:
+  - 401
+  - 403`
     };
 
     function pickTmpl(id) {
-      document.getElementById('spec-title').textContent = `templates/idor-${(id === 'order' ? 'order-access' : (id === 'user' ? 'user-profile' : id))}.yaml`;
+      const nameMap = {
+        user: 'user-profile',
+        order: 'order-access',
+        reset: 'password-reset'
+      };
+      const name = nameMap[id] || id;
+      document.getElementById('spec-title').textContent = `templates/idor-${name}.yaml`;
       document.getElementById('spec-body').textContent = specs[id];
       document.querySelectorAll('.spec-btn').forEach(b => {
         if (b.getAttribute('data-id') === id) {

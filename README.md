@@ -10,7 +10,7 @@
   <a href="https://golang.org/"><img src="https://img.shields.io/badge/Language-Go%201.22+-00ADD8.svg?style=for-the-badge&logo=go" alt="Go 1.22+"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/Dependencies-Zero%20(Stdlib)-success.svg?style=for-the-badge" alt="Zero External Dependencies">
-  <a href="https://github.com/jojin1709/idoraider/releases/tag/v1.0.0"><img src="https://img.shields.io/badge/Release-v1.0.0-purple.svg?style=for-the-badge&logo=github" alt="Release v1.0.0"></a>
+  <a href="https://github.com/jojin1709/idoraider/releases/tag/v1.1.0"><img src="https://img.shields.io/badge/Release-v1.1.0-purple.svg?style=for-the-badge&logo=github" alt="Release v1.1.0"></a>
 </p>
 
 ### High-Performance, Template-Driven BOLA / IDOR Vulnerability Scanner
@@ -221,7 +221,7 @@ Sweep ID ranges and receive instant alerts in Discord or Slack when a BOLA vulne
  ██║██████╔╝╚██████╔╝██║  ██║██║  ██║██║██████╔╝███████╗██║  ██║
  ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝
 
-       HUNTING BROKEN ACCESS CONTROL                      v1.0.0
+       HUNTING BROKEN ACCESS CONTROL                      v1.1.0
 
   Go-based BOLA/IDOR Vulnerability Scanner
   Author      : Jojin John
@@ -233,7 +233,7 @@ Sweep ID ranges and receive instant alerts in Discord or Slack when a BOLA vulne
   Concurrency : 20
   Time        : 2026-10-31 16:30:00
 
-[16:30:00] [INF] Loaded 10 YAML templates from templates/
+[16:30:00] [INF] Loaded 14 YAML templates from templates/
 [16:30:00] [INF] Target: https://api.target.com
 [16:30:00] [INF] Concurrency: 20 workers
 [16:30:00] [INF] Beginning scan...
