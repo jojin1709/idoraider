@@ -1,0 +1,17 @@
+id: idor-admin
+name: Admin Resource Access
+severity: critical
+description: Admin-only resource reachable with a regular user token
+method: GET
+path: /api/v1/admin/{id}
+headers:
+  Authorization: Bearer {token}
+ids:
+  - 1
+  - 2
+  - 3
+match_status:
+  - 200
+match_words:
+  - role
+  - permissions

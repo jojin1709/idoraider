@@ -1,0 +1,18 @@
+id: idor-file
+name: Uploaded File IDOR
+severity: high
+description: Uploaded file accessible with modified ID
+method: GET
+path: /api/v1/files/{id}
+headers:
+  Authorization: Bearer {token}
+ids:
+  - 100
+  - 101
+  - 102
+  - 103
+match_status:
+  - 200
+match_words:
+  - download_url
+  - filename

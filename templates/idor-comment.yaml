@@ -1,0 +1,18 @@
+id: idor-comment
+name: Comment Edit/Delete IDOR
+severity: medium
+description: Comment accessible/editable with a modified ID
+method: GET
+path: /api/v1/comments/{id}
+headers:
+  Authorization: Bearer {token}
+ids:
+  - 30
+  - 31
+  - 32
+  - 33
+match_status:
+  - 200
+match_words:
+  - author_id
+  - content

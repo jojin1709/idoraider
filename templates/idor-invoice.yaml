@@ -1,0 +1,19 @@
+id: idor-invoice
+name: Invoice IDOR (sequential ID)
+severity: medium
+description: Invoice accessible with sequential ID
+method: GET
+path: /api/v1/invoices/{id}
+headers:
+  Authorization: Bearer {token}
+ids:
+  - 85
+  - 86
+  - 87
+  - 88
+  - 89
+match_status:
+  - 200
+match_words:
+  - amount_due
+  - invoice_number

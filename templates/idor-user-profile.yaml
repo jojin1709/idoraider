@@ -1,0 +1,19 @@
+id: idor-user-profile
+name: User Profile IDOR
+severity: critical
+description: User profile accessible with a modified ID
+method: GET
+path: /api/v1/users/{id}
+headers:
+  Authorization: Bearer {token}
+ids:
+  - 1
+  - 2
+  - 3
+  - 123
+  - 124
+match_status:
+  - 200
+match_words:
+  - email
+  - username

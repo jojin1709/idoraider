@@ -1,0 +1,18 @@
+id: idor-message
+name: Private Message IDOR
+severity: critical
+description: Private message accessible with modified ID
+method: GET
+path: /api/v1/messages/{id}
+headers:
+  Authorization: Bearer {token}
+ids:
+  - 75
+  - 76
+  - 77
+  - 78
+match_status:
+  - 200
+match_words:
+  - body
+  - sender_id

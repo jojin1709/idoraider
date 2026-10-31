@@ -1,0 +1,18 @@
+id: idor-project
+name: Project Access Control
+severity: high
+description: Project accessible with modified ID
+method: GET
+path: /api/v1/projects/{id}
+headers:
+  Authorization: Bearer {token}
+ids:
+  - 10
+  - 11
+  - 12
+  - 13
+match_status:
+  - 200
+match_words:
+  - project_name
+  - members
