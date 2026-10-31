@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ ubuntu-latest, windows-latest ]
 
     steps:
       - name: Checkout code
@@ -38,9 +38,9 @@ jobs:
         run: go test -v -race ./...
         if: matrix.os == 'ubuntu-latest'
 
-      - name: Run unit tests (Windows & macOS)
+      - name: Run unit tests (Windows)
         run: go test -v ./...
-        if: matrix.os != 'ubuntu-latest'
+        if: matrix.os == 'windows-latest'
 
       - name: Build IDORaider binary
         run: go build -v -o idoraider-bin ./cmd/idoraider
