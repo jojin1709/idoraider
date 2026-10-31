@@ -5,10 +5,11 @@
 <br><br>
 
 <p align="center">
+  <a href="https://jojin1709.github.io/idoraider/"><img src="https://img.shields.io/badge/Docs-Interactive%20Website-00f5a0.svg?style=for-the-badge&logo=googlechrome&logoColor=black" alt="Documentation Website"></a>
   <a href="https://golang.org/"><img src="https://img.shields.io/badge/Language-Go%201.22+-00ADD8.svg?style=for-the-badge&logo=go" alt="Go 1.22+"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License: MIT"></a>
-  <img src="https://img.shields.io/badge/Dependencies-Zero%20(Stdlib%20Only)-success.svg?style=for-the-badge" alt="Zero External Dependencies">
-  <img src="https://img.shields.io/badge/Architecture-Autorize%20Style%20Replay-orange.svg?style=for-the-badge" alt="Dual-Token Replay">
+  <img src="https://img.shields.io/badge/Dependencies-Zero%20(Stdlib)-success.svg?style=for-the-badge" alt="Zero External Dependencies">
+  <a href="https://github.com/jojin1709/idoraider/releases/tag/v1.0.0"><img src="https://img.shields.io/badge/Release-v1.0.0-purple.svg?style=for-the-badge&logo=github" alt="Release v1.0.0"></a>
 </p>
 
 ### High-Performance, Template-Driven BOLA / IDOR Vulnerability Scanner
