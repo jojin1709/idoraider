@@ -16,3 +16,4 @@
 ## Checklist
 - [ ] Code follows existing project conventions and Go formatting standards (`gofmt`).
 - [ ] If adding a new template, `match_status`, candidate `ids`, and description are clearly specified.
+

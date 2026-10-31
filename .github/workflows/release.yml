@@ -70,3 +70,4 @@ jobs:
         with:
           files: |
             idoraider_${{ github.ref_name }}_${{ matrix.goos }}_${{ matrix.goarch }}.*
+

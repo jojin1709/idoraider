@@ -26,3 +26,4 @@ COPY --from=builder /src/templates /templates
 # Default entrypoint
 ENTRYPOINT ["idoraider"]
 CMD ["-h"]
+

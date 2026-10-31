@@ -162,3 +162,4 @@ func writeJSON(w http.ResponseWriter, status int, data response) {
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(data)
 }
+

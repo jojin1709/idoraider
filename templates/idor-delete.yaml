@@ -20,3 +20,4 @@ match_not_status:
 match_words:
   - deleted
   - success
+
