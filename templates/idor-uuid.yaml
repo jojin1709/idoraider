@@ -17,6 +17,6 @@ match_not_status:
   - 403
   - 404
 match_words:
-  - id
+  - uuid
   - created_at
 

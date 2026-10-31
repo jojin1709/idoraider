@@ -14,5 +14,5 @@ ids:
 match_status:
   - 200
 match_words:
-  - body
   - sender_id
+  - message

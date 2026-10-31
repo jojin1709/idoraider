@@ -15,4 +15,4 @@ match_status:
   - 200
 match_words:
   - author_id
-  - content
+  - comment
