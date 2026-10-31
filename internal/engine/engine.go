@@ -251,16 +251,20 @@ func probe(ctx context.Context, client *http.Client, cfg Config, t *template.Tem
 
 		if ownerOK && testOK {
 			res.Status = StatusVulnerable
-			res.Detail = fmt.Sprintf("Owner token: %d (accessible). Secondary token: %d (also accessible) — object-level authorization check missing", ownerCode, testCode)
+			res.Detail = fmt.Sprintf("HTTP %d: Owner token accessible, Secondary token also accessible — BOLA confirmed", testCode)
 		} else if ownerOK && !testOK {
 			res.Status = StatusNotVulnerable
-			res.Detail = fmt.Sprintf("Owner token: %d (accessible). Secondary token: %d — access correctly restricted", ownerCode, testCode)
+			res.Detail = fmt.Sprintf("HTTP %d: Owner accessible, Secondary denied (proper access control)", testCode)
 		} else if !ownerOK && testOK {
 			res.Status = StatusVulnerable
-			res.Detail = fmt.Sprintf("Owner token: %d (inaccessible) but secondary token: %d (accessible) — privilege anomaly / unauthorized access", ownerCode, testCode)
+			res.Detail = fmt.Sprintf("HTTP %d: Owner inaccessible (HTTP %d), but secondary token accessible", testCode, ownerCode)
 		} else {
 			res.Status = StatusNotVulnerable
-			res.Detail = fmt.Sprintf("Owner token: %d, Secondary token: %d — resource not accessible", ownerCode, testCode)
+			if ownerCode == 404 && testCode == 404 {
+				res.Detail = "HTTP 404: Endpoint not found for both tokens"
+			} else {
+				res.Detail = fmt.Sprintf("Owner: HTTP %d, Secondary: HTTP %d — resource not accessible", ownerCode, testCode)
+			}
 		}
 		return res
 	}
@@ -274,10 +278,23 @@ func probe(ctx context.Context, client *http.Client, cfg Config, t *template.Tem
 	res.StatusCode = code
 	if matches(t, code, body) {
 		res.Status = StatusVulnerable
-		res.Detail = fmt.Sprintf("Resource id=%s accessible (HTTP %d) without ownership verification", id, code)
+		res.Detail = fmt.Sprintf("HTTP %d: Resource id=%s accessible with sensitive keywords", code, id)
 	} else {
 		res.Status = StatusNotVulnerable
-		res.Detail = fmt.Sprintf("HTTP %d — proper access control", code)
+		switch code {
+		case 404:
+			res.Detail = "HTTP 404: Endpoint not found"
+		case 401:
+			res.Detail = "HTTP 401: Unauthorized (auth required)"
+		case 403:
+			res.Detail = "HTTP 403: Forbidden (access restricted)"
+		case 301, 302, 307, 308:
+			res.Detail = fmt.Sprintf("HTTP %d: Redirected", code)
+		case 200:
+			res.Detail = "HTTP 200: Response did not match keywords"
+		default:
+			res.Detail = fmt.Sprintf("HTTP %d: Inaccessible", code)
+		}
 	}
 	return res
 }

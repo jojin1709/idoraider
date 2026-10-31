@@ -11,3 +11,4 @@ test:
 
 clean:
 	rm -f idoraider idoraider.exe
+

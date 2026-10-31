@@ -6,3 +6,4 @@ if %ERRORLEVEL% EQU 0 (
 ) else (
     echo [ERROR] Build failed.
 )
+

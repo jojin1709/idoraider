@@ -145,6 +145,9 @@ func main() {
 	log("INF", fmt.Sprintf("Loaded %d YAML templates from %s", len(templates), *tmplDir))
 	log("INF", fmt.Sprintf("Target: %s", *target))
 	log("INF", fmt.Sprintf("Concurrency: %d workers", *concurrent))
+	if *token == "" && *secToken == "" {
+		log("WRN", "No auth token provided (--token). Probing endpoints without authentication.")
+	}
 	if *proxy != "" {
 		log("INF", fmt.Sprintf("Proxy: %s", *proxy))
 	}
@@ -216,13 +219,14 @@ func main() {
 
 func printBanner(target, tmplDir string, concurrency int, proxy string) {
 	fmt.Println(cyan + bold + `
- ██▓▓█████▄  ▒█████   ██▀███   ▄▄▄       ██▓▓██   ██▓▓█████  ██▀███
-▓██▒▒██▀ ██▌▒██▒  ██▒▓██ ▒ ██▒▒████▄    ▓██▒ ▒██  ██▒▓█   ▀ ▓██ ▒ ██▒
-▒██▒░██   █▌▒██░  ██▒▓██ ░▄█ ▒▒██  ▀█▄  ▒██▒  ▒██ ██░▒███   ▓██ ░▄█ ▒
-░██░░▓█▄   ▌▒██   ██░▒██▀▀█▄  ░██▄▄▄▄██ ░██░  ░ ▐██▓░▒▓█  ▄ ▒██▀▀█▄
-░██░░▒████▓ ░ ████▓▒░░██▓ ▒██▒ ▓█   ▓██▒░██░  ░ ██▒▓░░▒████▒░██▓ ▒██▒
+ ██╗██████╗  ██████╗ ██████╗  █████╗ ██╗██████╗ ███████╗██████╗ 
+ ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██║██╔══██╗██╔════╝██╔══██╗
+ ██║██║  ██║██║   ██║██████╔╝███████║██║██║  ██║█████╗  ██████╔╝
+ ██║██║  ██║██║   ██║██╔══██╗██╔══██║██║██║  ██║██╔══╝  ██╔══██╗
+ ██║██████╔╝╚██████╔╝██║  ██║██║  ██║██║██████╔╝███████╗██║  ██║
+ ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝
 ` + reset)
-	fmt.Println(dim + "        HUNTING BROKEN ACCESS CONTROL" + strings.Repeat(" ", 20) + "v" + version + reset)
+	fmt.Println(dim + "       HUNTING BROKEN ACCESS CONTROL" + strings.Repeat(" ", 22) + "v" + version + reset)
 	fmt.Println()
 	fmt.Println(grey + "  Go-based BOLA/IDOR Vulnerability Scanner" + reset)
 	fmt.Printf("  %-12s: Jojin John\n", "Author")
@@ -244,33 +248,45 @@ func log(level, msg string) {
 }
 
 func printHeader() {
-	fmt.Printf("%-10s %-5s %-55s %-16s %-15s %s\n", "PROGRESS", "#", "ENDPOINT", "STATUS", "SEVERITY", "DESCRIPTION")
-	fmt.Println(grey + strings.Repeat("─", 140) + reset)
+	fmt.Printf("%-10s %-5s %-6s %-16s %-12s %-50s %s\n", "PROGRESS", "#", "CODE", "STATUS", "SEVERITY", "ENDPOINT", "RESULT")
+	fmt.Println(grey + strings.Repeat("─", 145) + reset)
 }
 
 func printResult(n, total int, r engine.Result) {
-	var statusColor, line string
+	var statusColor, statusText string
+	codeStr := fmt.Sprintf("%d", r.StatusCode)
+	sevStr := "-"
+
 	switch r.Status {
 	case engine.StatusVulnerable:
 		statusColor = red + bold
+		statusText = "VULNERABLE"
+		sevStr = r.Severity
 	case engine.StatusError:
 		statusColor = yellow
+		statusText = "ERROR"
+		codeStr = "ERR"
 	default:
-		statusColor = green
+		if r.StatusCode == 404 {
+			statusText = "NOT FOUND"
+			statusColor = grey
+		} else if r.StatusCode == 401 || r.StatusCode == 403 {
+			statusText = "RESTRICTED"
+			statusColor = cyan
+		} else {
+			statusText = "NOT VULNERABLE"
+			statusColor = green
+		}
 	}
 
 	endpoint := r.Endpoint
-	if len(endpoint) > 53 {
-		endpoint = endpoint[:50] + "..."
-	}
-	desc := r.Description
-	if desc == "" {
-		desc = r.Detail
+	if len(endpoint) > 48 {
+		endpoint = endpoint[:45] + "..."
 	}
 	progress := fmt.Sprintf("[%d/%d]", n, total)
 
-	line = fmt.Sprintf("%-10s %-5d %-55s %s%-16s%s %-15s %s",
-		progress, n, endpoint, statusColor, r.Status, reset, r.Severity, desc)
+	line := fmt.Sprintf("%-10s %-5d %-6s %s%-16s%s %-12s %-50s %s",
+		progress, n, codeStr, statusColor, statusText, reset, sevStr, endpoint, r.Detail)
 	fmt.Println(line)
 }
 
