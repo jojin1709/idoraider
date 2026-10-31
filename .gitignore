@@ -11,6 +11,8 @@
 
 # Output results and logs
 /results/
+/dist/
+/release/
 *.log
 
 # IDEs and OS files
