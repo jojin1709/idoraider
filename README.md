@@ -1,8 +1,8 @@
 <div align="center">
 
-# ⚡ IDORaider
+<img src="./assets/banner.png" alt="IDORaider - Hunting Broken Access Control" width="100%">
 
-### High-Performance, Template-Driven BOLA / IDOR Vulnerability Scanner
+<br><br>
 
 <p align="center">
   <a href="https://golang.org/"><img src="https://img.shields.io/badge/Language-Go%201.22+-00ADD8.svg?style=for-the-badge&logo=go" alt="Go 1.22+"></a>
@@ -10,6 +10,8 @@
   <img src="https://img.shields.io/badge/Dependencies-Zero%20(Stdlib%20Only)-success.svg?style=for-the-badge" alt="Zero External Dependencies">
   <img src="https://img.shields.io/badge/Architecture-Autorize%20Style%20Replay-orange.svg?style=for-the-badge" alt="Dual-Token Replay">
 </p>
+
+### High-Performance, Template-Driven BOLA / IDOR Vulnerability Scanner
 
 **Built with precision by [JOJIN JOHN](https://github.com/jojin1709)**
 
