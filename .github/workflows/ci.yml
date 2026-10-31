@@ -34,13 +34,13 @@ jobs:
             exit 1
           fi
 
-      - name: Run unit tests
+      - name: Run unit tests (Linux with race detector)
         run: go test -v -race ./...
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'ubuntu-latest'
 
-      - name: Run unit tests (Windows)
+      - name: Run unit tests (Windows & macOS)
         run: go test -v ./...
-        if: matrix.os == 'windows-latest'
+        if: matrix.os != 'ubuntu-latest'
 
       - name: Build IDORaider binary
         run: go build -v -o idoraider-bin ./cmd/idoraider
