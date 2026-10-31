@@ -47,18 +47,20 @@ const (
 //	  - email
 //	  - username
 type Template struct {
-	ID          string
-	Name        string
-	Severity    string
-	Description string
-	Method      string
-	Path        string            // may contain {id} and {token} placeholders
-	Headers     map[string]string // values may contain {id} and {token}
-	Body        string            // optional request body, may contain {id}
-	IDs         []string          // candidate ID values to substitute for {id}
-	MatchStatus []int             // status codes considered "accessible"
-	MatchWords  []string          // response-body substrings considered "accessible"
-	SourceFile  string
+	ID             string
+	Name           string
+	Severity       string
+	Description    string
+	Method         string
+	Path           string            // may contain {id} and {token} placeholders
+	Headers        map[string]string // values may contain {id} and {token}
+	Body           string            // optional request body, may contain {id}
+	IDs            []string          // candidate ID values to substitute for {id}
+	MatchStatus    []int             // status codes considered "accessible"
+	MatchNotStatus []int             // status codes considered "restricted" (negative match)
+	MatchWords     []string          // response-body substrings considered "accessible"
+	MatchCondition string            // "any" (default) or "all"
+	SourceFile     string
 }
 
 // LoadDir reads every *.yaml / *.yml file in dir and returns the parsed
@@ -178,6 +180,8 @@ func LoadFile(path string) (*Template, error) {
 				t.Path = val
 			case "body":
 				t.Body = val
+			case "match_condition", "condition":
+				t.MatchCondition = strings.ToLower(val)
 			}
 			continue
 		}
@@ -196,6 +200,11 @@ func LoadFile(path string) (*Template, error) {
 		case "match_status":
 			t.MatchStatus = nil
 			curInts = &t.MatchStatus
+			curList, curMap = nil, nil
+			listIsInt = true
+		case "match_not_status":
+			t.MatchNotStatus = nil
+			curInts = &t.MatchNotStatus
 			curList, curMap = nil, nil
 			listIsInt = true
 		case "match_words":
@@ -220,6 +229,9 @@ func LoadFile(path string) (*Template, error) {
 	}
 	if t.Path == "" {
 		return nil, fmt.Errorf("template %s missing required field: path", path)
+	}
+	if t.MatchCondition == "" {
+		t.MatchCondition = "any"
 	}
 	if len(t.IDs) == 0 {
 		t.IDs = []string{"1"}

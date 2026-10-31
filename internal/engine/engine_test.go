@@ -208,3 +208,27 @@ func TestRun_RedirectControl(t *testing.T) {
 		t.Errorf("expected 1 vulnerable when following redirects, got %d", sumFollow.Vulnerable)
 	}
 }
+
+func TestMatches_NucleiStyle(t *testing.T) {
+	tmpl := &template.Template{
+		MatchStatus:    []int{200},
+		MatchNotStatus: []int{401, 403, 404},
+		MatchCondition: "all",
+		MatchWords:     []string{"user_id", "email"},
+	}
+
+	// 1. Should fail negative status check (403 is in MatchNotStatus)
+	if matches(tmpl, 403, `{"user_id": 1, "email": "a@b.com"}`) {
+		t.Errorf("expected false for status in MatchNotStatus")
+	}
+
+	// 2. Should fail condition 'all' if only one word is present
+	if matches(tmpl, 200, `{"user_id": 1}`) {
+		t.Errorf("expected false when missing 'email' under condition 'all'")
+	}
+
+	// 3. Should succeed if 200 and all words are present
+	if !matches(tmpl, 200, `{"user_id": 1, "email": "a@b.com"}`) {
+		t.Errorf("expected true when all words match and status is 200")
+	}
+}

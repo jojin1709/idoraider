@@ -215,6 +215,29 @@ func Run(ctx context.Context, cfg Config, templates []*template.Template, onResu
 	return sum
 }
 
+func formatErr(err error) string {
+	if err == nil {
+		return ""
+	}
+	msg := err.Error()
+	if strings.Contains(msg, "context deadline exceeded") || strings.Contains(msg, "Client.Timeout exceeded") {
+		return "Request timeout (server too slow)"
+	}
+	if strings.Contains(msg, "connection refused") || strings.Contains(msg, "connectex:") {
+		return "Connection refused"
+	}
+	if strings.Contains(msg, "no such host") {
+		return "DNS lookup failed"
+	}
+	if strings.Contains(msg, "connection reset") {
+		return "Connection reset (possible rate limit)"
+	}
+	if len(msg) > 42 {
+		return msg[:39] + "..."
+	}
+	return msg
+}
+
 func probe(ctx context.Context, client *http.Client, cfg Config, t *template.Template, id string) Result {
 	mode := "single-token"
 	if cfg.SecondaryToken != "" {
@@ -237,6 +260,7 @@ func probe(ctx context.Context, client *http.Client, cfg Config, t *template.Tem
 		ownerCode, ownerBody, err := doRequest(ctx, client, cfg, t, id, cfg.PrimaryToken)
 		if err != nil {
 			res.Status, res.Err = StatusError, err
+			res.Detail = formatErr(err)
 			return res
 		}
 		ownerOK := matches(t, ownerCode, ownerBody)
@@ -244,6 +268,7 @@ func probe(ctx context.Context, client *http.Client, cfg Config, t *template.Tem
 		testCode, testBody, err := doRequest(ctx, client, cfg, t, id, cfg.SecondaryToken)
 		if err != nil {
 			res.Status, res.Err = StatusError, err
+			res.Detail = formatErr(err)
 			return res
 		}
 		testOK := matches(t, testCode, testBody)
@@ -273,6 +298,7 @@ func probe(ctx context.Context, client *http.Client, cfg Config, t *template.Tem
 	code, body, err := doRequest(ctx, client, cfg, t, id, cfg.PrimaryToken)
 	if err != nil {
 		res.Status, res.Err = StatusError, err
+		res.Detail = formatErr(err)
 		return res
 	}
 	res.StatusCode = code
@@ -318,6 +344,10 @@ func doRequest(ctx context.Context, client *http.Client, cfg Config, t *template
 		return 0, "", err
 	}
 
+	// Realistic browser User-Agent so WAFs don't block Go-http-client by default
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+	req.Header.Set("Accept", "*/*")
+
 	if token != "" {
 		scheme := cfg.AuthScheme
 		if scheme != "" {
@@ -351,20 +381,43 @@ func doRequest(ctx context.Context, client *http.Client, cfg Config, t *template
 }
 
 func matches(t *template.Template, statusCode int, body string) bool {
-	statusOK := false
-	for _, s := range t.MatchStatus {
+	// 1. Negative status check (if status is in match_not_status, it cannot be a match)
+	for _, s := range t.MatchNotStatus {
 		if s == statusCode {
-			statusOK = true
-			break
+			return false
 		}
 	}
-	if !statusOK {
-		return false
+
+	// 2. Positive status check
+	if len(t.MatchStatus) > 0 {
+		statusOK := false
+		for _, s := range t.MatchStatus {
+			if s == statusCode {
+				statusOK = true
+				break
+			}
+		}
+		if !statusOK {
+			return false
+		}
 	}
+
+	// 3. Match words check
 	if len(t.MatchWords) == 0 {
 		return true
 	}
+
 	lower := strings.ToLower(body)
+	if strings.EqualFold(t.MatchCondition, "all") || strings.EqualFold(t.MatchCondition, "and") {
+		for _, w := range t.MatchWords {
+			if !strings.Contains(lower, strings.ToLower(w)) {
+				return false
+			}
+		}
+		return true
+	}
+
+	// Default: "any" / "or"
 	for _, w := range t.MatchWords {
 		if strings.Contains(lower, strings.ToLower(w)) {
 			return true

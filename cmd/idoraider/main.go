@@ -304,6 +304,9 @@ func printSummary(sum engine.Summary, jsonPath, mdPath string) {
 	fmt.Printf("%s%d not vulnerable%s\n", green, sum.NotVulnerable, reset)
 	if sum.Errors > 0 {
 		fmt.Printf("  %s%d requests errored%s\n", yellow, sum.Errors, reset)
+		if sum.Errors > (sum.TotalTested / 3) {
+			fmt.Printf("  %sTip: High error count detected. Target may rate-limit; try -c 5 and -d 100ms%s\n", yellow, reset)
+		}
 	}
 	fmt.Println(bar)
 	log("INF", "JSON report: "+jsonPath)

@@ -22,6 +22,11 @@ ids:
 match_status:
   - 200
   - 201
+match_not_status:
+  - 401
+  - 403
+  - 404
+match_condition: all
 match_words:
   - success
   - verified
@@ -51,6 +56,12 @@ match_words:
 	}
 	if len(tmpl.MatchStatus) != 2 || tmpl.MatchStatus[0] != 200 || tmpl.MatchStatus[1] != 201 {
 		t.Errorf("expected MatchStatus [200, 201], got %v", tmpl.MatchStatus)
+	}
+	if len(tmpl.MatchNotStatus) != 3 || tmpl.MatchNotStatus[0] != 401 {
+		t.Errorf("expected MatchNotStatus [401, 403, 404], got %v", tmpl.MatchNotStatus)
+	}
+	if tmpl.MatchCondition != "all" {
+		t.Errorf("expected MatchCondition 'all', got %q", tmpl.MatchCondition)
 	}
 	if len(tmpl.MatchWords) != 2 || tmpl.MatchWords[0] != "success" || tmpl.MatchWords[1] != "verified" {
 		t.Errorf("expected MatchWords [success, verified], got %v", tmpl.MatchWords)
@@ -82,6 +93,9 @@ func TestLoadFile_Defaults(t *testing.T) {
 	}
 	if tmpl.Method != "GET" {
 		t.Errorf("expected default method 'GET', got %q", tmpl.Method)
+	}
+	if tmpl.MatchCondition != "any" {
+		t.Errorf("expected default MatchCondition 'any', got %q", tmpl.MatchCondition)
 	}
 	if len(tmpl.IDs) != 1 || tmpl.IDs[0] != "1" {
 		t.Errorf("expected default IDs [1], got %v", tmpl.IDs)
@@ -130,4 +144,3 @@ func TestLoadDir(t *testing.T) {
 		t.Errorf("expected sorted templates [a-template, b-template], got [%s, %s]", list[0].ID, list[1].ID)
 	}
 }
-
