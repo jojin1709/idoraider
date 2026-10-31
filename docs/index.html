@@ -3,22 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IDORaider — High-Performance BOLA / IDOR Scanner</title>
-  <meta name="description" content="High-performance, template-driven BOLA / IDOR vulnerability scanner in Go with automated dual-token authorization replay. Built by JOJIN JOHN.">
-  <meta name="keywords" content="IDOR, BOLA, Vulnerability Scanner, API Security, Pentesting, Bug Bounty, Go, Autorize, OWASP">
-  <meta name="author" content="JOJIN JOHN">
+  <title>IDORaider — Documentation &amp; Guide</title>
+  <meta name="description" content="High-performance, template-driven BOLA / IDOR vulnerability scanner with dual-token replay. Built with Go standard library by JOJIN JOHN.">
   <link rel="icon" type="image/png" href="./assets/icon.png">
 
   <!-- Open Graph -->
-  <meta property="og:title" content="IDORaider — Hunting Broken Access Control">
+  <meta property="og:title" content="IDORaider — API Authorization Security Scanner">
   <meta property="og:description" content="Template-driven BOLA / IDOR vulnerability scanner for modern APIs with dual-token replay. Built with Go standard library.">
   <meta property="og:image" content="./assets/banner.png">
-  <meta property="og:url" content="https://github.com/jojin1709/idoraider">
+  <meta property="og:url" content="https://jojin1709.github.io/idoraider/">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -28,17 +26,16 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
           },
           colors: {
-            brand: {
-              cyan: '#00d2ff',
-              emerald: '#00f5a0',
-              purple: '#9d4edd',
-              dark: '#070a10',
-              card: '#0d131f',
-              border: 'rgba(255, 255, 255, 0.08)',
+            surface: {
+              50: '#fafafa',
+              100: '#f4f4f5',
+              800: '#27272a',
+              900: '#18181b',
+              950: '#09090b',
             }
           }
         }
@@ -48,594 +45,448 @@
 
   <style>
     body {
-      background-color: #06090e;
-      color: #e2e8f0;
+      background-color: #09090b;
+      color: #e4e4e7;
       font-family: 'Inter', sans-serif;
     }
-    .gradient-text {
-      background: linear-gradient(135deg, #00f5a0 0%, #00d2ff 50%, #9d4edd 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .gradient-border {
-      position: relative;
-      background: rgba(13, 19, 31, 0.8);
-      backdrop-filter: blur(12px);
+    .subtle-border {
       border: 1px solid rgba(255, 255, 255, 0.08);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .gradient-border:hover {
-      border-color: rgba(0, 210, 255, 0.35);
-      box-shadow: 0 0 25px rgba(0, 210, 255, 0.12);
-    }
-    .glow-cyan {
-      box-shadow: 0 0 40px -10px rgba(0, 210, 255, 0.25);
+    .subtle-border:hover {
+      border-color: rgba(255, 255, 255, 0.16);
     }
     .custom-scrollbar::-webkit-scrollbar {
-      height: 6px;
-      width: 6px;
+      height: 5px;
+      width: 5px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {
-      background: #070a10;
+      background: #09090b;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #1e293b;
+      background: #27272a;
       border-radius: 4px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #334155;
     }
   </style>
 </head>
 
-<body class="min-h-screen flex flex-col selection:bg-cyan-500 selection:text-black">
+<body class="min-h-screen flex flex-col antialiased">
 
-  <!-- Background Gradients -->
-  <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
-    <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-to-tr from-cyan-500/15 via-emerald-500/10 to-transparent blur-[120px] rounded-full"></div>
-    <div class="absolute top-[600px] -left-40 w-[600px] h-[600px] bg-gradient-to-br from-purple-500/10 to-transparent blur-[140px] rounded-full"></div>
-    <div class="absolute top-[1400px] -right-40 w-[600px] h-[600px] bg-gradient-to-bl from-cyan-500/10 to-transparent blur-[140px] rounded-full"></div>
+  <!-- Top Announcement Bar -->
+  <div class="bg-zinc-900 border-b border-zinc-800 text-xs text-zinc-300 py-2 px-4 text-center">
+    <span>IDORaider v1.0.0 is officially released &bull;</span>
+    <a href="https://github.com/jojin1709/idoraider/releases/tag/v1.0.0" target="_blank" class="font-medium text-white hover:underline ml-1 inline-flex items-center gap-1">
+      Download pre-compiled binaries <span aria-hidden="true">&rarr;</span>
+    </a>
   </div>
 
-  <!-- Header / Navigation -->
-  <header class="sticky top-0 z-50 backdrop-blur-md bg-[#06090e]/80 border-b border-white/[0.06]">
+  <!-- Main Navigation -->
+  <header class="sticky top-0 z-50 backdrop-blur-md bg-zinc-950/85 border-b border-zinc-800/80">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <img src="./assets/icon.png" alt="IDORaider Logo" class="w-9 h-9 rounded-lg shadow-lg border border-cyan-500/20">
-        <a href="#" class="font-extrabold text-xl tracking-tight text-white flex items-center gap-2">
-          <span>IDOR<span class="text-cyan-400">aider</span></span>
-          <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-800/50 font-mono">v1.0.0</span>
+        <img src="./assets/icon.png" alt="IDORaider Logo" class="w-8 h-8 rounded-lg border border-zinc-800">
+        <a href="#" class="font-semibold text-lg tracking-tight text-white flex items-center gap-2">
+          <span>IDORaider</span>
         </a>
+        <span class="text-xs px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 font-mono">v1.0.0</span>
       </div>
 
-      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-        <a href="#features" class="hover:text-cyan-400 transition-colors">Features</a>
-        <a href="#terminal-demo" class="hover:text-cyan-400 transition-colors">Live Demo</a>
-        <a href="#quick-start" class="hover:text-cyan-400 transition-colors">Quick Start</a>
-        <a href="#templates" class="hover:text-cyan-400 transition-colors">Templates</a>
-        <a href="#architecture" class="hover:text-cyan-400 transition-colors">BOLA Flow</a>
-        <a href="#cli" class="hover:text-cyan-400 transition-colors">CLI Reference</a>
+      <nav class="hidden md:flex items-center gap-6 text-sm text-zinc-400">
+        <a href="#overview" class="hover:text-white transition-colors">Overview</a>
+        <a href="#features" class="hover:text-white transition-colors">Capabilities</a>
+        <a href="#quickstart" class="hover:text-white transition-colors">Quick Start</a>
+        <a href="#templates" class="hover:text-white transition-colors">Templates</a>
+        <a href="#reference" class="hover:text-white transition-colors">CLI Reference</a>
+        <a href="#builder" class="hover:text-white transition-colors">Command Generator</a>
       </nav>
 
       <div class="flex items-center gap-3">
-        <a href="https://github.com/jojin1709/idoraider/releases/tag/v1.0.0" target="_blank"
-           class="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 transition-all">
-          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          <span>Download</span>
-        </a>
         <a href="https://github.com/jojin1709/idoraider" target="_blank"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-semibold shadow-lg shadow-cyan-500/20 transition-all">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 transition-colors">
+          <svg class="w-4 h-4 text-zinc-400" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
           <span>Star on GitHub</span>
         </a>
       </div>
     </div>
   </header>
 
-  <!-- Hero Section -->
+  <!-- Hero Section (Clean Minimalist Vercel / Linear Style) -->
   <main class="flex-grow">
-    <section class="relative pt-12 pb-20 md:pt-20 md:pb-28 overflow-hidden">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <section id="overview" class="py-16 sm:py-24 border-b border-zinc-800">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
 
-        <!-- Top Pill -->
-        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-800/40 text-cyan-300 text-xs font-medium mb-8 backdrop-blur-sm">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Go 1.22+ Standard Library Only &bull; Zero External Dependencies</span>
-          <span class="text-slate-500">|</span>
-          <span class="text-slate-300">OWASP API #1 BOLA Hunter</span>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 font-medium mb-6">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span>Open Source MIT &bull; 100% Go Standard Library &bull; Zero External Dependencies</span>
         </div>
 
-        <!-- Headline -->
-        <h1 class="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white mb-6 max-w-5xl mx-auto leading-[1.1]">
-          Hunt Broken Object Level Authorization <span class="gradient-text">with Zero Noise</span>
+        <h1 class="text-4xl sm:text-6xl font-bold tracking-tight text-white mb-6 leading-tight">
+          High-performance BOLA &amp; IDOR vulnerability scanner for modern APIs.
         </h1>
 
-        <p class="text-lg sm:text-xl text-slate-400 max-w-3xl mx-auto mb-10 font-normal leading-relaxed">
-          <strong>IDORaider</strong> is a high-performance, template-driven security scanner that replays API requests under verified multi-token authentication contexts to definitively prove BOLA / IDOR vulnerabilities.
+        <p class="text-lg text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
+          IDORaider automates multi-token authorization replay to definitively prove Broken Object Level Authorization (OWASP API Top 10 #1) with verified HTTP status codes and zero false positives.
         </p>
 
-        <!-- Banner Image Showcase -->
-        <div class="max-w-4xl mx-auto mb-12 rounded-2xl overflow-hidden border border-white/10 shadow-2xl glow-cyan">
-          <img src="./assets/banner.png" alt="IDORaider Banner and Terminal Demo" class="w-full h-auto">
-        </div>
-
-        <!-- Quick Install Tabs -->
-        <div class="max-w-3xl mx-auto bg-[#0d131f]/90 border border-white/10 rounded-xl p-4 sm:p-5 shadow-2xl backdrop-blur-xl mb-10 text-left">
-          <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
-            <div class="flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
-              <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
-              <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
-              <span class="text-xs text-slate-400 font-mono ml-2">quick start installation</span>
-            </div>
-            <div class="flex items-center gap-2 text-xs font-mono" id="install-tabs">
-              <button onclick="setInstallTab('windows')" class="install-tab-btn px-2.5 py-1 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/60 font-semibold" data-target="windows">Windows</button>
-              <button onclick="setInstallTab('linux')" class="install-tab-btn px-2.5 py-1 rounded hover:bg-white/5 text-slate-400" data-target="linux">Linux / Mac</button>
-              <button onclick="setInstallTab('go')" class="install-tab-btn px-2.5 py-1 rounded hover:bg-white/5 text-slate-400" data-target="go">Go Install</button>
+        <!-- Command Card -->
+        <div class="max-w-2xl mx-auto bg-zinc-900/90 border border-zinc-800 rounded-xl p-4 text-left shadow-xl mb-8">
+          <div class="flex items-center justify-between text-xs text-zinc-400 mb-2.5 pb-2 border-b border-zinc-800">
+            <span class="font-mono">Quick Install (PowerShell / Command Prompt)</span>
+            <div class="flex items-center gap-1.5">
+              <span class="text-zinc-500">Go 1.22+</span>
             </div>
           </div>
-
-          <div class="relative flex items-center justify-between font-mono text-xs sm:text-sm bg-black/60 rounded-lg p-3.5 border border-white/5">
-            <code id="install-command" class="text-cyan-300 overflow-x-auto whitespace-nowrap pr-12 custom-scrollbar">git clone https://github.com/jojin1709/idoraider.git; cd idoraider; go build -o idoraider.exe ./cmd/idoraider</code>
-            <button onclick="copyInstallCmd()" class="absolute right-2 px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20 text-slate-200 transition-all flex items-center gap-1.5 text-xs font-sans font-medium" title="Copy to clipboard">
-              <svg id="copy-icon" class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-              <span id="copy-text">Copy</span>
+          <div class="flex items-center justify-between font-mono text-xs sm:text-sm bg-zinc-950 rounded-lg p-3 border border-zinc-800/80">
+            <code id="hero-cmd" class="text-zinc-200 overflow-x-auto whitespace-nowrap pr-4 custom-scrollbar">git clone https://github.com/jojin1709/idoraider.git; cd idoraider; go build -o idoraider.exe ./cmd/idoraider</code>
+            <button onclick="copyHeroCmd()" class="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-sans text-zinc-200 transition-colors whitespace-nowrap" id="hero-copy-btn">
+              Copy
             </button>
           </div>
         </div>
 
-        <!-- Metric Badges -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-4 text-center">
-          <div class="gradient-border rounded-xl p-4">
-            <div class="text-2xl sm:text-3xl font-extrabold text-cyan-400 font-mono">0 deps</div>
-            <div class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-medium">Stdlib Only &bull; Offline Build</div>
-          </div>
-          <div class="gradient-border rounded-xl p-4">
-            <div class="text-2xl sm:text-3xl font-extrabold text-emerald-400 font-mono">2x Token</div>
-            <div class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-medium">Autorize-Style Replay</div>
-          </div>
-          <div class="gradient-border rounded-xl p-4">
-            <div class="text-2xl sm:text-3xl font-extrabold text-purple-400 font-mono">10+</div>
-            <div class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-medium">Pre-Packaged YAML Templates</div>
-          </div>
-          <div class="gradient-border rounded-xl p-4">
-            <div class="text-2xl sm:text-3xl font-extrabold text-yellow-400 font-mono">100%</div>
-            <div class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-medium">Real HTTP Response Codes</div>
-          </div>
+        <div class="flex flex-wrap items-center justify-center gap-3 text-sm">
+          <a href="#quickstart" class="px-5 py-2.5 rounded-lg bg-white text-zinc-950 font-semibold hover:bg-zinc-200 transition-colors">
+            Get Started
+          </a>
+          <a href="https://github.com/jojin1709/idoraider/releases/tag/v1.0.0" target="_blank"
+             class="px-5 py-2.5 rounded-lg bg-zinc-900 text-zinc-200 font-medium hover:bg-zinc-800 border border-zinc-800 transition-colors">
+            Download Binaries (v1.0.0)
+          </a>
+          <a href="#templates" class="px-5 py-2.5 rounded-lg text-zinc-400 hover:text-white transition-colors">
+            Browse Templates &rarr;
+          </a>
         </div>
 
       </div>
     </section>
 
-    <!-- Interactive Terminal Simulator Section -->
-    <section id="terminal-demo" class="py-16 bg-[#04060a] border-y border-white/[0.06]">
+    <!-- Key Metrics Grid -->
+    <section class="border-b border-zinc-800 bg-zinc-950/40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center sm:text-left divide-y sm:divide-y-0 sm:divide-x divide-zinc-800">
+          <div class="pt-4 sm:pt-0 sm:pl-4">
+            <div class="text-2xl font-bold text-white font-mono">Zero Deps</div>
+            <div class="text-xs text-zinc-400 mt-1">100% Go standard library, builds offline</div>
+          </div>
+          <div class="pt-4 sm:pt-0 sm:pl-8">
+            <div class="text-2xl font-bold text-white font-mono">Dual-Token</div>
+            <div class="text-xs text-zinc-400 mt-1">Autorize-style owner vs. other validation</div>
+          </div>
+          <div class="pt-4 sm:pt-0 sm:pl-8">
+            <div class="text-2xl font-bold text-white font-mono">10 Starter Packs</div>
+            <div class="text-xs text-zinc-400 mt-1">Pre-configured YAML scan templates</div>
+          </div>
+          <div class="pt-4 sm:pt-0 sm:pl-8">
+            <div class="text-2xl font-bold text-white font-mono">Multi-Format</div>
+            <div class="text-xs text-zinc-400 mt-1">Timestamped JSON &amp; Markdown reports</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Capabilities Section -->
+    <section id="features" class="py-20 border-b border-zinc-800">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center max-w-3xl mx-auto mb-10">
-          <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">Interactive Terminal Simulator</h2>
-          <p class="text-slate-400 mt-3 text-base">Watch IDORaider's real-time detection engine in action. No simulated fake results — accurate HTTP status validation and BOLA classification.</p>
+        <div class="max-w-3xl mb-14">
+          <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Core Architecture &amp; Capabilities</h2>
+          <p class="text-zinc-400 mt-2 text-base">Designed to replace generic URL fuzzers with deterministic authorization testing.</p>
         </div>
 
-        <div class="max-w-5xl mx-auto rounded-2xl bg-[#090e17] border border-white/10 shadow-2xl overflow-hidden font-mono text-xs sm:text-sm">
-          <!-- Terminal Titlebar -->
-          <div class="bg-[#0e1624] px-4 py-3 border-b border-white/10 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full bg-rose-500"></span>
-              <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-              <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-              <span class="text-slate-400 text-xs ml-3">PowerShell 7 — .\idoraider.exe -u https://api.target.com -t templates/</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <button onclick="runSimulatedScan()" class="px-3 py-1 rounded bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 border border-cyan-500/40 text-xs font-semibold flex items-center gap-1.5 transition-all">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>Re-run Scan</span>
-              </button>
-            </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-colors">
+            <div class="text-xs font-mono text-zinc-400 mb-2 uppercase tracking-wider font-semibold">Verification</div>
+            <h3 class="text-base font-semibold text-white mb-2">Dual-Token BOLA Replay</h3>
+            <p class="text-zinc-400 text-sm leading-relaxed">
+              Validates that Resource Owner Token A succeeds (200 OK) before checking if Secondary Token B can access it. Eliminates false positives on nonexistent endpoints.
+            </p>
           </div>
 
-          <!-- Terminal Filter Buttons -->
-          <div class="bg-[#070b12] px-4 py-2 border-b border-white/5 flex items-center gap-2 text-xs">
-            <span class="text-slate-500">Filter View:</span>
-            <button onclick="filterTerminal('all')" class="term-filter px-2 py-0.5 rounded bg-white/10 text-white font-medium" data-f="all">All (8)</button>
-            <button onclick="filterTerminal('vulnerable')" class="term-filter px-2 py-0.5 rounded text-rose-400 hover:bg-rose-950/40" data-f="vulnerable">Vulnerable (2)</button>
-            <button onclick="filterTerminal('restricted')" class="term-filter px-2 py-0.5 rounded text-cyan-400 hover:bg-cyan-950/40" data-f="restricted">Restricted (3)</button>
-            <button onclick="filterTerminal('notfound')" class="term-filter px-2 py-0.5 rounded text-slate-400 hover:bg-slate-900" data-f="notfound">Not Found (3)</button>
+          <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-colors">
+            <div class="text-xs font-mono text-zinc-400 mb-2 uppercase tracking-wider font-semibold">Integrations</div>
+            <h3 class="text-base font-semibold text-white mb-2">Burp Suite &amp; Proxy Support</h3>
+            <p class="text-zinc-400 text-sm leading-relaxed">
+              Route every probe through an interception proxy with <code class="text-zinc-300 font-mono text-xs">-x http://127.0.0.1:8080</code> and disable TLS verification with <code class="text-zinc-300 font-mono text-xs">-k</code>.
+            </p>
           </div>
 
-          <!-- Terminal Output Body -->
-          <div id="terminal-body" class="p-4 sm:p-6 overflow-x-auto custom-scrollbar space-y-1.5 leading-relaxed text-slate-300">
-            <div class="text-cyan-400">
-<pre class="font-bold leading-tight">
- ██╗██████╗  ██████╗ ██████╗  █████╗ ██╗██████╗ ███████╗██████╗ 
- ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██║██╔══██╗██╔════╝██╔══██╗
- ██║██║  ██║██║   ██║██████╔╝███████║██║██║  ██║█████╗  ██████╔╝
- ██║██║  ██║██║   ██║██╔══██╗██╔══██║██║██║  ██║██╔══╝  ██╔══██╗
- ██║██████╔╝╚██████╔╝██║  ██║██║  ██║██║██████╔╝███████╗██║  ██║
- ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝</pre>
-            </div>
-            <div class="text-slate-500">       HUNTING BROKEN ACCESS CONTROL                      v1.0.0</div>
-            <div class="text-slate-400 pt-1">  Target: <span class="text-white">https://api.target.com</span> &bull; Workers: <span class="text-white">20</span> &bull; Replay Mode: <span class="text-emerald-400">Dual-Token (Owner vs Other)</span></div>
-            <div class="text-slate-500 pb-2">[16:40:00] [INF] Loaded 10 YAML templates from templates/</div>
+          <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-colors">
+            <div class="text-xs font-mono text-zinc-400 mb-2 uppercase tracking-wider font-semibold">Detection Engine</div>
+            <h3 class="text-base font-semibold text-white mb-2">Negative &amp; Compound Matching</h3>
+            <p class="text-zinc-400 text-sm leading-relaxed">
+              Templates support <code class="text-zinc-300 font-mono text-xs">match_not_status: [401, 403, 404]</code> to instantly filter restricted responses, plus <code class="text-zinc-300 font-mono text-xs">match_condition: all | any</code> for compound keywords.
+            </p>
+          </div>
 
-            <div class="text-slate-400 font-bold border-b border-slate-700/60 pb-1 pt-2 flex justify-between">
-              <span>PROGRESS  #  CODE   STATUS          SEVERITY   ENDPOINT &amp; DETAILS</span>
-            </div>
+          <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-colors">
+            <div class="text-xs font-mono text-zinc-400 mb-2 uppercase tracking-wider font-semibold">Safety</div>
+            <h3 class="text-base font-semibold text-white mb-2">Redirect Loop Suppression</h3>
+            <p class="text-zinc-400 text-sm leading-relaxed">
+              Does not follow 301/302 redirects by default. Prevents authentication redirect gateways from masquerading as successful 200 OK responses.
+            </p>
+          </div>
 
-            <!-- Terminal Rows -->
-            <div class="term-row vulnerable flex items-start gap-3 py-0.5" data-cat="vulnerable">
-              <span class="text-slate-500">[1/8]</span>
-              <span class="text-slate-400">1</span>
-              <span class="text-emerald-400 font-bold">200</span>
-              <span class="text-rose-400 font-bold w-28">VULNERABLE</span>
-              <span class="text-rose-500 font-bold w-20">CRITICAL</span>
-              <span class="text-slate-300">/api/v1/users/102 &mdash; <span class="text-slate-400">Owner &amp; Secondary both returned 200 OK &bull; BOLA Confirmed</span></span>
-            </div>
+          <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-colors">
+            <div class="text-xs font-mono text-zinc-400 mb-2 uppercase tracking-wider font-semibold">Flexibility</div>
+            <h3 class="text-base font-semibold text-white mb-2">Runtime ID Overrides</h3>
+            <p class="text-zinc-400 text-sm leading-relaxed">
+              Override static template candidates using <code class="text-zinc-300 font-mono text-xs">--ids 1,2,uuid-1,uuid-2</code> to dynamically probe target-specific object identifiers.
+            </p>
+          </div>
 
-            <div class="term-row restricted flex items-start gap-3 py-0.5" data-cat="restricted">
-              <span class="text-slate-500">[2/8]</span>
-              <span class="text-slate-400">2</span>
-              <span class="text-cyan-400 font-bold">403</span>
-              <span class="text-cyan-400 w-28">RESTRICTED</span>
-              <span class="text-slate-600 w-20">-</span>
-              <span class="text-slate-400">/api/v1/admin/2 &mdash; Forbidden (Owner accessible, Secondary rejected)</span>
-            </div>
-
-            <div class="term-row vulnerable flex items-start gap-3 py-0.5" data-cat="vulnerable">
-              <span class="text-slate-500">[3/8]</span>
-              <span class="text-slate-400">3</span>
-              <span class="text-emerald-400 font-bold">200</span>
-              <span class="text-rose-400 font-bold w-28">VULNERABLE</span>
-              <span class="text-orange-400 font-bold w-20">HIGH</span>
-              <span class="text-slate-300">/api/v1/invoices/89 &mdash; <span class="text-slate-400">Financial record readable by unrelated user token</span></span>
-            </div>
-
-            <div class="term-row restricted flex items-start gap-3 py-0.5" data-cat="restricted">
-              <span class="text-slate-500">[4/8]</span>
-              <span class="text-slate-400">4</span>
-              <span class="text-cyan-400 font-bold">401</span>
-              <span class="text-cyan-400 w-28">RESTRICTED</span>
-              <span class="text-slate-600 w-20">-</span>
-              <span class="text-slate-400">/api/v1/projects/12 &mdash; Unauthorized (valid authentication required)</span>
-            </div>
-
-            <div class="term-row notfound flex items-start gap-3 py-0.5" data-cat="notfound">
-              <span class="text-slate-500">[5/8]</span>
-              <span class="text-slate-400">5</span>
-              <span class="text-slate-500 font-bold">404</span>
-              <span class="text-slate-500 w-28">NOT FOUND</span>
-              <span class="text-slate-600 w-20">-</span>
-              <span class="text-slate-500">/api/v1/files/999 &mdash; Resource does not exist</span>
-            </div>
-
-            <div class="term-row restricted flex items-start gap-3 py-0.5" data-cat="restricted">
-              <span class="text-slate-500">[6/8]</span>
-              <span class="text-slate-400">6</span>
-              <span class="text-cyan-400 font-bold">403</span>
-              <span class="text-cyan-400 w-28">RESTRICTED</span>
-              <span class="text-slate-600 w-20">-</span>
-              <span class="text-slate-400">/api/v1/team/4 &mdash; Access restricted to organization admin</span>
-            </div>
-
-            <div class="term-row notfound flex items-start gap-3 py-0.5" data-cat="notfound">
-              <span class="text-slate-500">[7/8]</span>
-              <span class="text-slate-400">7</span>
-              <span class="text-slate-500 font-bold">404</span>
-              <span class="text-slate-500 w-28">NOT FOUND</span>
-              <span class="text-slate-600 w-20">-</span>
-              <span class="text-slate-500">/api/v1/reports/custom/4 &mdash; Resource does not exist</span>
-            </div>
-
-            <div class="term-row notfound flex items-start gap-3 py-0.5" data-cat="notfound">
-              <span class="text-slate-500">[8/8]</span>
-              <span class="text-slate-400">8</span>
-              <span class="text-slate-500 font-bold">404</span>
-              <span class="text-slate-500 w-28">NOT FOUND</span>
-              <span class="text-slate-600 w-20">-</span>
-              <span class="text-slate-500">/api/v1/comments/0 &mdash; Resource does not exist</span>
-            </div>
-
-            <div class="pt-3 border-t border-slate-700/60 text-slate-300">
-              <span class="text-rose-400 font-bold">&cross; Scan completed in 1.48s</span> &mdash; 8 endpoints tested, <span class="text-rose-400 font-bold">2 vulnerable</span> (1 critical, 1 high), 6 safe.
-              <div class="text-xs text-slate-500 mt-1">[16:40:02] [INF] Reports written to results/2026-10-31_164002.json &amp; .md (Exit Code: 3)</div>
-            </div>
+          <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-colors">
+            <div class="text-xs font-mono text-zinc-400 mb-2 uppercase tracking-wider font-semibold">Automation</div>
+            <h3 class="text-base font-semibold text-white mb-2">CI/CD Pipeline Ready</h3>
+            <p class="text-zinc-400 text-sm leading-relaxed">
+              Exits with code <code class="text-zinc-300 font-mono text-xs">3</code> when any vulnerability is detected and <code class="text-zinc-300 font-mono text-xs">0</code> when clean, enabling straightforward build gating in CI.
+            </p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Key Features Grid -->
-    <section id="features" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center max-w-3xl mx-auto mb-16">
-        <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">Built for Elite Bug Hunters &amp; Security Engineers</h2>
-        <p class="text-slate-400 mt-3 text-base">Eliminating the noise and false positives of generic fuzzers by automating the exact methodology manual pentesters use.</p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Feature 1 -->
-        <div class="gradient-border rounded-xl p-6">
-          <div class="w-12 h-12 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-5">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-          </div>
-          <h3 class="text-lg font-semibold text-white mb-2">Automated Dual-Token Replay</h3>
-          <p class="text-slate-400 text-sm leading-relaxed">
-            Send request with Owner Token A, then replay with Attacker Token B. If Token B gains access to Token A's private resource, BOLA is mathematically proven with zero false positives.
-          </p>
-        </div>
-
-        <!-- Feature 2 -->
-        <div class="gradient-border rounded-xl p-6">
-          <div class="w-12 h-12 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-5">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          </div>
-          <h3 class="text-lg font-semibold text-white mb-2">Zero External Dependencies</h3>
-          <p class="text-slate-400 text-sm leading-relaxed">
-            Written in 100% Go standard library. Features a custom fast YAML parser, zero supply-chain risk, zero external packages, and builds instantly offline on any OS.
-          </p>
-        </div>
-
-        <!-- Feature 3 -->
-        <div class="gradient-border rounded-xl p-6">
-          <div class="w-12 h-12 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-5">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          </div>
-          <h3 class="text-lg font-semibold text-white mb-2">Advanced Match Conditions</h3>
-          <p class="text-slate-400 text-sm leading-relaxed">
-            Supports <code class="text-cyan-300">match_not_status: [401, 403, 404]</code> to immediately filter out restricted or missing resources, and <code class="text-cyan-300">match_condition: all | any</code> for compound keyword matching.
-          </p>
-        </div>
-
-        <!-- Feature 4 -->
-        <div class="gradient-border rounded-xl p-6">
-          <div class="w-12 h-12 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-5">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-          </div>
-          <h3 class="text-lg font-semibold text-white mb-2">Burp Suite &amp; Proxy Routing</h3>
-          <p class="text-slate-400 text-sm leading-relaxed">
-            Seamlessly proxy all scan traffic through Burp Suite, OWASP ZAP, or Caido using <code class="text-cyan-300">-x http://127.0.0.1:8080</code>. Includes <code class="text-cyan-300">-k</code> to bypass self-signed CA certs.
-          </p>
-        </div>
-
-        <!-- Feature 5 -->
-        <div class="gradient-border rounded-xl p-6">
-          <div class="w-12 h-12 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 mb-5">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-          </div>
-          <h3 class="text-lg font-semibold text-white mb-2">Redirect Loop Suppression</h3>
-          <p class="text-slate-400 text-sm leading-relaxed">
-            By default, IDORaider halts on 301/302 redirects instead of following them into authentication gateways and login pages, eliminating false-positive 200 responses.
-          </p>
-        </div>
-
-        <!-- Feature 6 -->
-        <div class="gradient-border rounded-xl p-6">
-          <div class="w-12 h-12 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 mb-5">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          </div>
-          <h3 class="text-lg font-semibold text-white mb-2">Dual JSON &amp; Markdown Reports</h3>
-          <p class="text-slate-400 text-sm leading-relaxed">
-            Automatically generates machine-readable JSON for CI/CD pipelines plus beautifully formatted Markdown summaries ready to paste directly into HackerOne or Bugcrowd reports.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Interactive Command Builder Section -->
-    <section id="quick-start" class="py-20 bg-[#070b13] border-t border-white/[0.06]">
+    <!-- Quick Start Guide -->
+    <section id="quickstart" class="py-20 border-b border-zinc-800 bg-zinc-950/60">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center max-w-3xl mx-auto mb-12">
-          <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">Interactive Command Builder</h2>
-          <p class="text-slate-400 mt-3 text-base">Configure your target, tokens, and options to generate the exact command ready to run in your terminal.</p>
+        <div class="max-w-3xl mb-12">
+          <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Quick Start &amp; Examples</h2>
+          <p class="text-zinc-400 mt-2 text-base">Run your first authorization scan in under two minutes.</p>
         </div>
 
-        <div class="max-w-4xl mx-auto bg-[#0d1422] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Single-token example -->
+          <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono font-semibold text-zinc-400">1. SINGLE-TOKEN ID ENUMERATION</span>
+              <span class="text-xs text-zinc-500 font-sans">Basic Mode</span>
+            </div>
+            <p class="text-zinc-400 text-xs mb-4">
+              Tests candidate IDs using your primary user token to check if sensitive data is readable without explicit ownership.
+            </p>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-lg p-3 font-mono text-xs text-zinc-300 overflow-x-auto custom-scrollbar">
+              .\idoraider.exe -u https://api.target.com -t templates/ --token "YOUR_JWT"
+            </div>
+          </div>
+
+          <!-- Dual-token example -->
+          <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono font-semibold text-emerald-400">2. DUAL-TOKEN BOLA REPLAY</span>
+              <span class="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 font-medium">Recommended</span>
+            </div>
+            <p class="text-zinc-400 text-xs mb-4">
+              Executes dual replay between the resource owner account and an unrelated account to definitively prove authorization bypass.
+            </p>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-lg p-3 font-mono text-xs text-zinc-300 overflow-x-auto custom-scrollbar">
+              .\idoraider.exe -u https://api.target.com -t templates/ --token "OWNER_JWT" --secondary-token "ATTACKER_JWT"
+            </div>
+          </div>
+
+          <!-- Burp Suite example -->
+          <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono font-semibold text-zinc-400">3. BURP SUITE INTERCEPTION PROXY</span>
+              <span class="text-xs text-zinc-500 font-sans">Proxy Mode</span>
+            </div>
+            <p class="text-zinc-400 text-xs mb-4">
+              Passes all traffic through Burp Suite or OWASP ZAP with self-signed certificate acceptance enabled.
+            </p>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-lg p-3 font-mono text-xs text-zinc-300 overflow-x-auto custom-scrollbar">
+              .\idoraider.exe -u https://api.target.com -t templates/ --token "JWT" -x http://127.0.0.1:8080 -k
+            </div>
+          </div>
+
+          <!-- Custom Candidate IDs -->
+          <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono font-semibold text-zinc-400">4. CUSTOM IDENTIFIER INJECTION</span>
+              <span class="text-xs text-zinc-500 font-sans">Target Override</span>
+            </div>
+            <p class="text-zinc-400 text-xs mb-4">
+              Override static template IDs with real application identifiers (integers, slugs, or UUIDs).
+            </p>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-lg p-3 font-mono text-xs text-zinc-300 overflow-x-auto custom-scrollbar">
+              .\idoraider.exe -u https://api.target.com -t templates/ --ids "1024,1025,uuid-abc-123"
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Command Generator -->
+    <section id="builder" class="py-20 border-b border-zinc-800">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-8 text-center sm:text-left">
+          <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Interactive Command Generator</h2>
+          <p class="text-zinc-400 mt-2 text-sm">Select options to generate the ready-to-paste command for your platform.</p>
+        </div>
+
+        <div class="bg-zinc-900/70 border border-zinc-800 rounded-xl p-6 sm:p-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
             <div>
-              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Target Base URL</label>
-              <input type="text" id="cfg-target" value="https://api.target.com" oninput="updateCmdBuilder()"
-                     class="w-full bg-[#06090e] border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-cyan-500 transition-colors">
+              <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Target Base URL</label>
+              <input type="text" id="cg-target" value="https://api.target.com" oninput="genCmd()"
+                     class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-zinc-500 transition-colors">
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Replay Mode</label>
-              <select id="cfg-mode" onchange="updateCmdBuilder()" class="w-full bg-[#06090e] border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-cyan-500 transition-colors">
-                <option value="dual" selected>Dual-Token (Owner vs. Other — Recommended)</option>
-                <option value="single">Single-Token (ID Enumeration Only)</option>
+              <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Operating System</label>
+              <select id="cg-os" onchange="genCmd()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-zinc-500 transition-colors">
+                <option value="win" selected>Windows (.\idoraider.exe)</option>
+                <option value="nix">Linux / macOS (./idoraider)</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Primary Token (Owner Account)</label>
-              <input type="text" id="cfg-token" value="eyJhbGciOi..." oninput="updateCmdBuilder()"
-                     class="w-full bg-[#06090e] border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-cyan-500 transition-colors">
+              <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Primary Token (Owner)</label>
+              <input type="text" id="cg-token" value="TOKEN_A" oninput="genCmd()"
+                     class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-zinc-500 transition-colors">
             </div>
 
-            <div id="cfg-sec-container">
-              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Secondary Token (Attacker Account)</label>
-              <input type="text" id="cfg-sec-token" value="eyJhbGciOi..." oninput="updateCmdBuilder()"
-                     class="w-full bg-[#06090e] border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-cyan-500 transition-colors">
+            <div>
+              <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Secondary Token (Attacker Replay)</label>
+              <input type="text" id="cg-sectoken" value="TOKEN_B" oninput="genCmd()"
+                     class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-zinc-500 transition-colors">
             </div>
           </div>
 
-          <!-- Toggles -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 border-y border-white/10 mb-6 text-xs text-slate-300">
-            <label class="flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" id="cfg-burp" onchange="updateCmdBuilder()" class="rounded bg-black border-slate-700 text-cyan-500 focus:ring-0">
-              <span>Burp Proxy (-x)</span>
+          <div class="flex flex-wrap items-center gap-6 py-4 border-t border-zinc-800 mb-6 text-xs text-zinc-300 font-sans">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="cg-burp" onchange="genCmd()" class="rounded bg-zinc-950 border-zinc-700 text-white">
+              <span>Burp Proxy (-x 127.0.0.1:8080)</span>
             </label>
-            <label class="flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" id="cfg-insecure" onchange="updateCmdBuilder()" class="rounded bg-black border-slate-700 text-cyan-500 focus:ring-0">
-              <span>Insecure TLS (-k)</span>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="cg-insecure" onchange="genCmd()" class="rounded bg-zinc-950 border-zinc-700 text-white">
+              <span>Skip TLS Cert (-k)</span>
             </label>
-            <label class="flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" id="cfg-silent" onchange="updateCmdBuilder()" class="rounded bg-black border-slate-700 text-cyan-500 focus:ring-0">
-              <span>Silent Mode</span>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="cg-delay" onchange="genCmd()" class="rounded bg-zinc-950 border-zinc-700 text-white">
+              <span>Rate Delay (-d 100ms)</span>
             </label>
-            <label class="flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" id="cfg-delay" onchange="updateCmdBuilder()" class="rounded bg-black border-slate-700 text-cyan-500 focus:ring-0">
-              <span>Delay (100ms)</span>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="cg-silent" onchange="genCmd()" class="rounded bg-zinc-950 border-zinc-700 text-white">
+              <span>Silent Mode (--silent)</span>
             </label>
           </div>
 
-          <!-- Generated Command Box -->
-          <div class="bg-black/80 rounded-xl p-4 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <code id="builder-output" class="text-xs sm:text-sm font-mono text-cyan-300 overflow-x-auto w-full custom-scrollbar py-1">
-              .\idoraider.exe -u https://api.target.com -t templates/ --token "eyJhbGciOi..." --secondary-token "eyJhbGciOi..." -c 20
-            </code>
-            <button onclick="copyGeneratedCmd()" class="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 shadow-lg shadow-cyan-500/20">
-              <svg id="gen-copy-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-              <span id="gen-copy-text">Copy Command</span>
+          <div class="bg-zinc-950 rounded-lg p-4 border border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <code id="cg-output" class="text-xs sm:text-sm font-mono text-zinc-200 overflow-x-auto w-full custom-scrollbar py-1"></code>
+            <button onclick="copyGenerated()" class="px-4 py-2 rounded-lg bg-white text-zinc-950 font-semibold text-xs whitespace-nowrap hover:bg-zinc-200 transition-colors" id="cg-copy-btn">
+              Copy Command
             </button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Templates Explorer Section -->
-    <section id="templates" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center max-w-3xl mx-auto mb-12">
-        <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">Template-Driven Architecture</h2>
-        <p class="text-slate-400 mt-3 text-base">Easily author custom YAML probes or leverage pre-built templates covering the most dangerous API attack vectors.</p>
-      </div>
-
-      <div class="max-w-4xl mx-auto bg-[#0d131f] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-        <div class="bg-[#080d17] px-4 py-3 border-b border-white/10 flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1 sm:pb-0" id="tmpl-tab-container">
-            <button onclick="showTmpl('user')" class="tmpl-btn px-3 py-1.5 rounded-lg text-xs font-mono bg-cyan-950 text-cyan-300 border border-cyan-800/60 font-semibold" data-t="user">idor-user-profile.yaml</button>
-            <button onclick="showTmpl('admin')" class="tmpl-btn px-3 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:bg-white/5" data-t="admin">idor-admin.yaml</button>
-            <button onclick="showTmpl('invoice')" class="tmpl-btn px-3 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:bg-white/5" data-t="invoice">idor-invoice.yaml</button>
-            <button onclick="showTmpl('orders')" class="tmpl-btn px-3 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:bg-white/5" data-t="orders">idor-order-access.yaml</button>
-          </div>
-          <button onclick="copyTmplCode()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
-            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-            <span>Copy Template</span>
-          </button>
-        </div>
-
-        <div class="p-6 font-mono text-xs sm:text-sm bg-black/50 overflow-x-auto custom-scrollbar">
-          <pre id="tmpl-code" class="text-slate-300 leading-relaxed"></pre>
-        </div>
-      </div>
-    </section>
-
-    <!-- BOLA Architecture Flow -->
-    <section id="architecture" class="py-20 bg-[#05080e] border-t border-white/[0.06]">
+    <!-- Templates Section -->
+    <section id="templates" class="py-20 border-b border-zinc-800 bg-zinc-950/40">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center max-w-3xl mx-auto mb-16">
-          <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">How Dual-Token BOLA Detection Works</h2>
-          <p class="text-slate-400 mt-3 text-base">A transparent, deterministic 4-state evaluation engine that guarantees proof of authorization bypass.</p>
+        <div class="max-w-3xl mb-12">
+          <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Template Syntax Specification</h2>
+          <p class="text-zinc-400 mt-2 text-base">Templates are written in standard, clean YAML syntax without third-party dependencies.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
-          <!-- Step 1 -->
-          <div class="gradient-border rounded-xl p-6 relative">
-            <div class="text-xs font-mono text-cyan-400 font-bold mb-2">PHASE 01</div>
-            <h3 class="text-base font-semibold text-white mb-2">Template Hydration</h3>
-            <p class="text-slate-400 text-xs leading-relaxed">
-              Paths and candidate resource IDs ({id}) are mapped to worker queues. Custom candidate overrides (--ids) are injected.
-            </p>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <!-- Template selector -->
+          <div class="lg:col-span-4 space-y-2">
+            <div class="text-xs font-mono uppercase tracking-wider text-zinc-400 mb-2 font-semibold">Included Templates</div>
+            <button onclick="pickTmpl('user')" class="spec-btn w-full text-left px-4 py-3 rounded-lg border border-zinc-700 bg-zinc-900 text-white text-xs font-mono font-medium" data-id="user">
+              idor-user-profile.yaml
+            </button>
+            <button onclick="pickTmpl('admin')" class="spec-btn w-full text-left px-4 py-3 rounded-lg border border-zinc-800/60 bg-zinc-950 text-zinc-400 hover:text-white text-xs font-mono" data-id="admin">
+              idor-admin.yaml
+            </button>
+            <button onclick="pickTmpl('invoice')" class="spec-btn w-full text-left px-4 py-3 rounded-lg border border-zinc-800/60 bg-zinc-950 text-zinc-400 hover:text-white text-xs font-mono" data-id="invoice">
+              idor-invoice.yaml
+            </button>
+            <button onclick="pickTmpl('order')" class="spec-btn w-full text-left px-4 py-3 rounded-lg border border-zinc-800/60 bg-zinc-950 text-zinc-400 hover:text-white text-xs font-mono" data-id="order">
+              idor-order-access.yaml
+            </button>
           </div>
 
-          <!-- Step 2 -->
-          <div class="gradient-border rounded-xl p-6 relative">
-            <div class="text-xs font-mono text-emerald-400 font-bold mb-2">PHASE 02</div>
-            <h3 class="text-base font-semibold text-white mb-2">Owner Baseline</h3>
-            <p class="text-slate-400 text-xs leading-relaxed">
-              Target endpoint is requested with Owner Token A to verify the resource exists and owner access is legitimate (200 OK).
-            </p>
-          </div>
-
-          <!-- Step 3 -->
-          <div class="gradient-border rounded-xl p-6 relative">
-            <div class="text-xs font-mono text-purple-400 font-bold mb-2">PHASE 03</div>
-            <h3 class="text-base font-semibold text-white mb-2">Attacker Replay</h3>
-            <p class="text-slate-400 text-xs leading-relaxed">
-              The exact same request is immediately executed using Secondary Token B (an unrelated, lower-privileged user).
-            </p>
-          </div>
-
-          <!-- Step 4 -->
-          <div class="gradient-border rounded-xl p-6 relative">
-            <div class="text-xs font-mono text-rose-400 font-bold mb-2">PHASE 04</div>
-            <h3 class="text-base font-semibold text-white mb-2">BOLA Verification</h3>
-            <p class="text-slate-400 text-xs leading-relaxed">
-              If Token B also receives 200 OK with keywords, <strong class="text-rose-400">BOLA is mathematically proven</strong> and flagged as Critical/High.
-            </p>
+          <!-- Code viewer -->
+          <div class="lg:col-span-8 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+            <div class="bg-zinc-950 px-4 py-2.5 border-b border-zinc-800 flex items-center justify-between text-xs text-zinc-400 font-mono">
+              <span id="spec-title">templates/idor-user-profile.yaml</span>
+              <button onclick="copySpec()" class="text-zinc-400 hover:text-white font-sans text-xs" id="spec-copy">Copy YAML</button>
+            </div>
+            <pre class="p-6 font-mono text-xs sm:text-sm text-zinc-300 leading-relaxed overflow-x-auto custom-scrollbar"><code id="spec-body"></code></pre>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- CLI Reference Section -->
-    <section id="cli" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center max-w-3xl mx-auto mb-12">
-        <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">Full CLI Reference</h2>
-        <p class="text-slate-400 mt-3 text-base">Complete command-line options supported by the IDORaider binary.</p>
+    <!-- Full CLI Reference Table -->
+    <section id="reference" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mb-12">
+        <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">CLI Options Reference</h2>
+        <p class="text-zinc-400 mt-2 text-base">Complete list of flags supported by the IDORaider engine.</p>
       </div>
 
-      <div class="max-w-5xl mx-auto bg-[#0d131f] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+      <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
         <div class="overflow-x-auto custom-scrollbar">
           <table class="w-full text-left text-xs sm:text-sm font-mono">
-            <thead class="bg-[#090e17] text-slate-400 border-b border-white/10 uppercase tracking-wider text-xs">
+            <thead class="bg-zinc-950 text-zinc-400 border-b border-zinc-800 text-xs">
               <tr>
-                <th class="py-3.5 px-6">Flag</th>
-                <th class="py-3.5 px-6">Default</th>
-                <th class="py-3.5 px-6 font-sans">Description</th>
+                <th class="py-3 px-6">Option</th>
+                <th class="py-3 px-6">Default</th>
+                <th class="py-3 px-6 font-sans">Description</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-white/5 text-slate-300">
+            <tbody class="divide-y divide-zinc-800/60 text-zinc-300">
               <tr>
-                <td class="py-3 px-6 text-cyan-300">-u, --url</td>
-                <td class="py-3 px-6 text-slate-500 font-sans italic">required</td>
-                <td class="py-3 px-6 font-sans">Target base URL (e.g. <code class="text-slate-300 font-mono">https://api.target.com</code>)</td>
+                <td class="py-3 px-6 font-semibold text-white">-u, --url</td>
+                <td class="py-3 px-6 text-zinc-500 font-sans italic">required</td>
+                <td class="py-3 px-6 font-sans">Target base URL (e.g. <code class="text-zinc-200 font-mono">https://api.target.com</code>)</td>
               </tr>
               <tr>
-                <td class="py-3 px-6 text-cyan-300">-t</td>
-                <td class="py-3 px-6 text-slate-400">templates/</td>
+                <td class="py-3 px-6 font-semibold text-white">-t</td>
+                <td class="py-3 px-6 text-zinc-400">templates/</td>
                 <td class="py-3 px-6 font-sans">Directory containing YAML scan templates</td>
               </tr>
               <tr>
-                <td class="py-3 px-6 text-cyan-300">-c</td>
-                <td class="py-3 px-6 text-slate-400">20</td>
-                <td class="py-3 px-6 font-sans">Concurrent worker routines</td>
+                <td class="py-3 px-6 font-semibold text-white">-c</td>
+                <td class="py-3 px-6 text-zinc-400">20</td>
+                <td class="py-3 px-6 font-sans">Concurrent worker routines in pool</td>
               </tr>
               <tr>
-                <td class="py-3 px-6 text-cyan-300">--token</td>
-                <td class="py-3 px-6 text-slate-500 font-sans italic">$IDORAIDER_TOKEN</td>
+                <td class="py-3 px-6 font-semibold text-white">--token</td>
+                <td class="py-3 px-6 text-zinc-500 font-sans italic">$IDORAIDER_TOKEN</td>
                 <td class="py-3 px-6 font-sans">Primary authorized token (resource owner account)</td>
               </tr>
               <tr>
-                <td class="py-3 px-6 text-cyan-300">--secondary-token</td>
-                <td class="py-3 px-6 text-slate-500 font-sans italic">$IDORAIDER_SECONDARY_TOKEN</td>
+                <td class="py-3 px-6 font-semibold text-white">--secondary-token</td>
+                <td class="py-3 px-6 text-zinc-500 font-sans italic">$IDORAIDER_SECONDARY_TOKEN</td>
                 <td class="py-3 px-6 font-sans">Secondary test token (attacker / unrelated account)</td>
               </tr>
               <tr>
-                <td class="py-3 px-6 text-cyan-300">-x, --proxy</td>
-                <td class="py-3 px-6 text-slate-500 font-sans italic">none</td>
+                <td class="py-3 px-6 font-semibold text-white">-x, --proxy</td>
+                <td class="py-3 px-6 text-zinc-500 font-sans italic">none</td>
                 <td class="py-3 px-6 font-sans">Route traffic through HTTP/HTTPS/SOCKS5 proxy (Burp Suite)</td>
               </tr>
               <tr>
-                <td class="py-3 px-6 text-cyan-300">-k, --insecure</td>
-                <td class="py-3 px-6 text-slate-400">false</td>
-                <td class="py-3 px-6 font-sans">Skip TLS certificate verification (useful for Burp Suite CA)</td>
+                <td class="py-3 px-6 font-semibold text-white">-k, --insecure</td>
+                <td class="py-3 px-6 text-zinc-400">false</td>
+                <td class="py-3 px-6 font-sans">Skip TLS certificate verification (useful for Burp CA)</td>
               </tr>
               <tr>
-                <td class="py-3 px-6 text-cyan-300">-d, --delay</td>
-                <td class="py-3 px-6 text-slate-400">0s</td>
-                <td class="py-3 px-6 font-sans">Delay between requests for gentle rate limiting (e.g. <code class="text-slate-300 font-mono">100ms</code>)</td>
+                <td class="py-3 px-6 font-semibold text-white">-d, --delay</td>
+                <td class="py-3 px-6 text-zinc-400">0s</td>
+                <td class="py-3 px-6 font-sans">Delay between requests for gentle rate limiting (e.g. <code class="text-zinc-200 font-mono">100ms</code>)</td>
               </tr>
               <tr>
-                <td class="py-3 px-6 text-cyan-300">--ids</td>
-                <td class="py-3 px-6 text-slate-500 font-sans italic">none</td>
-                <td class="py-3 px-6 font-sans">Comma-separated candidate IDs override (e.g. <code class="text-slate-300 font-mono">1,2,uuid-1</code>)</td>
+                <td class="py-3 px-6 font-semibold text-white">--ids</td>
+                <td class="py-3 px-6 text-zinc-500 font-sans italic">none</td>
+                <td class="py-3 px-6 font-sans">Comma-separated candidate IDs override (e.g. <code class="text-zinc-200 font-mono">1,2,uuid-1</code>)</td>
               </tr>
               <tr>
-                <td class="py-3 px-6 text-cyan-300">--silent</td>
-                <td class="py-3 px-6 text-slate-400">false</td>
-                <td class="py-3 px-6 font-sans">Only print confirmed vulnerable findings and final summary</td>
+                <td class="py-3 px-6 font-semibold text-white">--silent</td>
+                <td class="py-3 px-6 text-zinc-400">false</td>
+                <td class="py-3 px-6 font-sans">Only print confirmed findings and final summary</td>
               </tr>
               <tr>
-                <td class="py-3 px-6 text-cyan-300">-o</td>
-                <td class="py-3 px-6 text-slate-400">results/</td>
-                <td class="py-3 px-6 font-sans">Directory to write JSON and Markdown reports into</td>
+                <td class="py-3 px-6 font-semibold text-white">-o</td>
+                <td class="py-3 px-6 text-zinc-400">results/</td>
+                <td class="py-3 px-6 font-sans">Output directory for structured JSON and Markdown reports</td>
               </tr>
             </tbody>
           </table>
@@ -644,125 +495,72 @@
     </section>
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-[#030508] border-t border-white/[0.08] py-12">
+  <!-- Clean Minimalist Footer -->
+  <footer class="border-t border-zinc-800 bg-zinc-950 py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
       <div class="flex items-center gap-3">
-        <img src="./assets/icon.png" alt="IDORaider" class="w-10 h-10 rounded-xl shadow-lg border border-cyan-500/30">
+        <img src="./assets/icon.png" alt="IDORaider" class="w-8 h-8 rounded-lg border border-zinc-800">
         <div>
-          <div class="font-extrabold text-white text-base tracking-tight">IDOR<span class="text-cyan-400">aider</span></div>
-          <div class="text-xs text-slate-400">Hunting Broken Access Control &bull; Open Source under MIT</div>
+          <div class="font-semibold text-white text-sm">IDORaider</div>
+          <div class="text-xs text-zinc-400">Insecure Direct Object Reference scanner &bull; MIT License</div>
         </div>
       </div>
 
-      <div class="text-center md:text-right text-xs text-slate-400 font-sans">
-        <div>Developed with &hearts; by <a href="https://github.com/jojin1709" target="_blank" class="text-cyan-400 font-semibold hover:underline">JOJIN JOHN</a></div>
-        <div class="text-slate-500 mt-1">&copy; 2026 JOJIN JOHN. All rights reserved. Authorized security testing only.</div>
+      <div class="text-center md:text-right text-xs text-zinc-400 font-sans">
+        <div>Developed by <a href="https://github.com/jojin1709" target="_blank" class="text-white font-medium hover:underline">JOJIN JOHN</a></div>
+        <div class="text-zinc-500 mt-1">&copy; 2026 JOJIN JOHN. Authorized security testing only.</div>
       </div>
 
-      <div class="flex items-center gap-4 text-xs font-medium text-slate-400">
-        <a href="https://github.com/jojin1709/idoraider" target="_blank" class="hover:text-cyan-300">GitHub</a>
-        <a href="https://github.com/jojin1709/idoraider/releases" target="_blank" class="hover:text-cyan-300">Releases</a>
-        <a href="https://github.com/jojin1709/idoraider/blob/main/LICENSE" target="_blank" class="hover:text-cyan-300">License</a>
-        <a href="https://github.com/jojin1709/idoraider/blob/main/SECURITY.md" target="_blank" class="hover:text-cyan-300">Security</a>
+      <div class="flex items-center gap-4 text-xs font-medium text-zinc-400">
+        <a href="https://github.com/jojin1709/idoraider" target="_blank" class="hover:text-white">GitHub</a>
+        <a href="https://github.com/jojin1709/idoraider/releases" target="_blank" class="hover:text-white">Releases</a>
+        <a href="https://github.com/jojin1709/idoraider/blob/main/LICENSE" target="_blank" class="hover:text-white">License</a>
+        <a href="https://github.com/jojin1709/idoraider/blob/main/SECURITY.md" target="_blank" class="hover:text-white">Security</a>
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
   <script>
-    const installCommands = {
-      windows: 'git clone https://github.com/jojin1709/idoraider.git; cd idoraider; go build -o idoraider.exe ./cmd/idoraider',
-      linux: 'git clone https://github.com/jojin1709/idoraider.git && cd idoraider && go build -o idoraider ./cmd/idoraider',
-      go: 'go install github.com/jojin1709/idoraider/cmd/idoraider@latest'
-    };
-
-    function setInstallTab(tab) {
-      document.getElementById('install-command').textContent = installCommands[tab];
-      document.querySelectorAll('.install-tab-btn').forEach(btn => {
-        if (btn.getAttribute('data-target') === tab) {
-          btn.className = 'install-tab-btn px-2.5 py-1 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/60 font-semibold';
-        } else {
-          btn.className = 'install-tab-btn px-2.5 py-1 rounded hover:bg-white/5 text-slate-400';
-        }
-      });
-    }
-
-    function copyInstallCmd() {
-      const text = document.getElementById('install-command').textContent;
+    function copyHeroCmd() {
+      const text = document.getElementById('hero-cmd').textContent;
       navigator.clipboard.writeText(text);
-      const copyText = document.getElementById('copy-text');
-      copyText.textContent = 'Copied!';
-      setTimeout(() => copyText.textContent = 'Copy', 2000);
+      const btn = document.getElementById('hero-copy-btn');
+      btn.textContent = 'Copied';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
     }
 
-    function updateCmdBuilder() {
-      const target = document.getElementById('cfg-target').value || 'https://api.target.com';
-      const mode = document.getElementById('cfg-mode').value;
-      const token = document.getElementById('cfg-token').value;
-      const secToken = document.getElementById('cfg-sec-token').value;
-      const secContainer = document.getElementById('cfg-sec-container');
-      const burp = document.getElementById('cfg-burp').checked;
-      const insecure = document.getElementById('cfg-insecure').checked;
-      const silent = document.getElementById('cfg-silent').checked;
-      const delay = document.getElementById('cfg-delay').checked;
+    function genCmd() {
+      const target = document.getElementById('cg-target').value || 'https://api.target.com';
+      const os = document.getElementById('cg-os').value;
+      const token = document.getElementById('cg-token').value;
+      const secToken = document.getElementById('cg-sectoken').value;
+      const burp = document.getElementById('cg-burp').checked;
+      const insecure = document.getElementById('cg-insecure').checked;
+      const delay = document.getElementById('cg-delay').checked;
+      const silent = document.getElementById('cg-silent').checked;
 
-      if (mode === 'single') {
-        secContainer.style.display = 'none';
-      } else {
-        secContainer.style.display = 'block';
-      }
-
-      let cmd = `.\\idoraider.exe -u ${target} -t templates/`;
+      const bin = (os === 'win') ? '.\\idoraider.exe' : './idoraider';
+      let cmd = `${bin} -u ${target} -t templates/`;
       if (token) cmd += ` --token "${token}"`;
-      if (mode === 'dual' && secToken) cmd += ` --secondary-token "${secToken}"`;
+      if (secToken) cmd += ` --secondary-token "${secToken}"`;
       if (burp) cmd += ` -x http://127.0.0.1:8080`;
       if (insecure) cmd += ` -k`;
       if (delay) cmd += ` -d 100ms`;
       if (silent) cmd += ` --silent`;
 
-      document.getElementById('builder-output').textContent = cmd;
+      document.getElementById('cg-output').textContent = cmd;
     }
 
-    function copyGeneratedCmd() {
-      const text = document.getElementById('builder-output').textContent.trim();
+    function copyGenerated() {
+      const text = document.getElementById('cg-output').textContent.trim();
       navigator.clipboard.writeText(text);
-      const btnText = document.getElementById('gen-copy-text');
-      btnText.textContent = 'Copied!';
-      setTimeout(() => btnText.textContent = 'Copy Command', 2000);
+      const btn = document.getElementById('cg-copy-btn');
+      btn.textContent = 'Copied';
+      setTimeout(() => btn.textContent = 'Copy Command', 2000);
     }
 
-    // Terminal Filter
-    function filterTerminal(cat) {
-      document.querySelectorAll('.term-filter').forEach(btn => {
-        if (btn.getAttribute('data-f') === cat) {
-          btn.className = 'term-filter px-2 py-0.5 rounded bg-white/10 text-white font-medium';
-        } else {
-          btn.className = 'term-filter px-2 py-0.5 rounded text-slate-400 hover:bg-slate-900';
-        }
-      });
-
-      document.querySelectorAll('.term-row').forEach(row => {
-        if (cat === 'all' || row.getAttribute('data-cat') === cat) {
-          row.style.display = 'flex';
-        } else {
-          row.style.display = 'none';
-        }
-      });
-    }
-
-    function runSimulatedScan() {
-      const rows = document.querySelectorAll('.term-row');
-      rows.forEach(r => r.style.opacity = '0.2');
-      rows.forEach((r, idx) => {
-        setTimeout(() => {
-          r.style.opacity = '1';
-        }, (idx + 1) * 180);
-      });
-    }
-
-    // Templates Code
-    const templatesData = {
+    const specs = {
       user: `id: idor-user-profile
 name: User Profile IDOR
 severity: critical
@@ -826,7 +624,7 @@ match_words:
   - total
   - payment`,
 
-      orders: `id: idor-order-access
+      order: `id: idor-order-access
 name: Order Access IDOR
 severity: critical
 description: Customer shipping and order details accessible by ID
@@ -844,27 +642,29 @@ match_words:
   - shipping_address`
     };
 
-    function showTmpl(name) {
-      document.getElementById('tmpl-code').textContent = templatesData[name];
-      document.querySelectorAll('.tmpl-btn').forEach(btn => {
-        if (btn.getAttribute('data-t') === name) {
-          btn.className = 'tmpl-btn px-3 py-1.5 rounded-lg text-xs font-mono bg-cyan-950 text-cyan-300 border border-cyan-800/60 font-semibold';
+    function pickTmpl(id) {
+      document.getElementById('spec-title').textContent = `templates/idor-${(id === 'order' ? 'order-access' : (id === 'user' ? 'user-profile' : id))}.yaml`;
+      document.getElementById('spec-body').textContent = specs[id];
+      document.querySelectorAll('.spec-btn').forEach(b => {
+        if (b.getAttribute('data-id') === id) {
+          b.className = 'spec-btn w-full text-left px-4 py-3 rounded-lg border border-zinc-700 bg-zinc-900 text-white text-xs font-mono font-medium';
         } else {
-          btn.className = 'tmpl-btn px-3 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:bg-white/5';
+          b.className = 'spec-btn w-full text-left px-4 py-3 rounded-lg border border-zinc-800/60 bg-zinc-950 text-zinc-400 hover:text-white text-xs font-mono';
         }
       });
     }
 
-    function copyTmplCode() {
-      const code = document.getElementById('tmpl-code').textContent;
+    function copySpec() {
+      const code = document.getElementById('spec-body').textContent;
       navigator.clipboard.writeText(code);
-      alert('Template copied to clipboard!');
+      const btn = document.getElementById('spec-copy');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy YAML', 2000);
     }
 
-    // Init
     document.addEventListener('DOMContentLoaded', () => {
-      showTmpl('user');
-      updateCmdBuilder();
+      genCmd();
+      pickTmpl('user');
     });
   </script>
 </body>
