@@ -201,6 +201,30 @@
           </div>
 
           <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-colors">
+            <div class="text-xs font-mono text-zinc-400 mb-2 uppercase tracking-wider font-semibold">Discovery</div>
+            <h3 class="text-base font-semibold text-white mb-2">OpenAPI / Swagger Auto-Importer</h3>
+            <p class="text-zinc-400 text-sm leading-relaxed">
+              Pass <code class="text-zinc-300 font-mono text-xs">--openapi https://api.target.com/swagger.json</code> to automatically parse specs and generate BOLA scan templates on the fly.
+            </p>
+          </div>
+
+          <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-colors">
+            <div class="text-xs font-mono text-zinc-400 mb-2 uppercase tracking-wider font-semibold">Unix Pipeline</div>
+            <h3 class="text-base font-semibold text-white mb-2">STDIN Input &amp; Range Expansion</h3>
+            <p class="text-zinc-400 text-sm leading-relaxed">
+              Pipe targets directly via <code class="text-zinc-300 font-mono text-xs">cat targets.txt | idoraider</code> and expand numeric ranges like <code class="text-zinc-300 font-mono text-xs">--ids 1-100</code> with <code class="text-zinc-300 font-mono text-xs">--only-vulnerable</code>.
+            </p>
+          </div>
+
+          <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-colors">
+            <div class="text-xs font-mono text-zinc-400 mb-2 uppercase tracking-wider font-semibold">Alerting &amp; Resilience</div>
+            <h3 class="text-base font-semibold text-white mb-2">Webhooks &amp; 429 Auto-Backoff</h3>
+            <p class="text-zinc-400 text-sm leading-relaxed">
+              Push real-time alerts to Discord/Slack via <code class="text-zinc-300 font-mono text-xs">--webhook &lt;url&gt;</code> while automatic 429 backoff respects <code class="text-zinc-300 font-mono text-xs">Retry-After</code> headers.
+            </p>
+          </div>
+
+          <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-colors">
             <div class="text-xs font-mono text-zinc-400 mb-2 uppercase tracking-wider font-semibold">Integrations</div>
             <h3 class="text-base font-semibold text-white mb-2">Burp Suite &amp; Proxy Support</h3>
             <p class="text-zinc-400 text-sm leading-relaxed">
@@ -350,6 +374,10 @@
 
           <div class="flex flex-wrap items-center gap-6 py-4 border-t border-zinc-800 mb-6 text-xs text-zinc-300 font-sans">
             <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="cg-only-vuln" onchange="genCmd()" class="rounded bg-zinc-950 border-zinc-700 text-white" checked>
+              <span>Only Vulnerable (--only-vulnerable)</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" id="cg-burp" onchange="genCmd()" class="rounded bg-zinc-950 border-zinc-700 text-white">
               <span>Burp Proxy (-x 127.0.0.1:8080)</span>
             </label>
@@ -435,13 +463,18 @@
             <tbody class="divide-y divide-zinc-800/60 text-zinc-300">
               <tr>
                 <td class="py-3 px-6 font-semibold text-white">-u, --url</td>
-                <td class="py-3 px-6 text-zinc-500 font-sans italic">required</td>
-                <td class="py-3 px-6 font-sans">Target base URL (e.g. <code class="text-zinc-200 font-mono">https://api.target.com</code>)</td>
+                <td class="py-3 px-6 text-zinc-500 font-sans italic">stdin or flag</td>
+                <td class="py-3 px-6 font-sans">Target base URL (e.g. <code class="text-zinc-200 font-mono">https://api.target.com</code>) or read from STDIN pipe</td>
               </tr>
               <tr>
                 <td class="py-3 px-6 font-semibold text-white">-t</td>
                 <td class="py-3 px-6 text-zinc-400">templates/</td>
                 <td class="py-3 px-6 font-sans">Directory containing YAML scan templates</td>
+              </tr>
+              <tr>
+                <td class="py-3 px-6 font-semibold text-white">--openapi, --swagger</td>
+                <td class="py-3 px-6 text-zinc-500 font-sans italic">none</td>
+                <td class="py-3 px-6 font-sans">OpenAPI 2.0/3.0+ URL or local file to auto-generate scan templates</td>
               </tr>
               <tr>
                 <td class="py-3 px-6 font-semibold text-white">-c</td>
@@ -476,7 +509,17 @@
               <tr>
                 <td class="py-3 px-6 font-semibold text-white">--ids</td>
                 <td class="py-3 px-6 text-zinc-500 font-sans italic">none</td>
-                <td class="py-3 px-6 font-sans">Comma-separated candidate IDs override (e.g. <code class="text-zinc-200 font-mono">1,2,uuid-1</code>)</td>
+                <td class="py-3 px-6 font-sans">Candidate IDs or numeric ranges (e.g. <code class="text-zinc-200 font-mono">1-100</code> or <code class="text-zinc-200 font-mono">1,2,uuid-1</code>)</td>
+              </tr>
+              <tr>
+                <td class="py-3 px-6 font-semibold text-white">--webhook</td>
+                <td class="py-3 px-6 text-zinc-500 font-sans italic">none</td>
+                <td class="py-3 px-6 font-sans">Discord, Slack, or generic webhook URL to receive scan alerts</td>
+              </tr>
+              <tr>
+                <td class="py-3 px-6 font-semibold text-white">--only-vulnerable</td>
+                <td class="py-3 px-6 text-zinc-400">false</td>
+                <td class="py-3 px-6 font-sans">Only print confirmed vulnerable findings in the terminal table</td>
               </tr>
               <tr>
                 <td class="py-3 px-6 font-semibold text-white">--silent</td>
@@ -535,6 +578,7 @@
       const os = document.getElementById('cg-os').value;
       const token = document.getElementById('cg-token').value;
       const secToken = document.getElementById('cg-sectoken').value;
+      const onlyVuln = document.getElementById('cg-only-vuln').checked;
       const burp = document.getElementById('cg-burp').checked;
       const insecure = document.getElementById('cg-insecure').checked;
       const delay = document.getElementById('cg-delay').checked;
@@ -544,6 +588,7 @@
       let cmd = `${bin} -u ${target} -t templates/`;
       if (token) cmd += ` --token "${token}"`;
       if (secToken) cmd += ` --secondary-token "${secToken}"`;
+      if (onlyVuln) cmd += ` --only-vulnerable`;
       if (burp) cmd += ` -x http://127.0.0.1:8080`;
       if (insecure) cmd += ` -k`;
       if (delay) cmd += ` -d 100ms`;

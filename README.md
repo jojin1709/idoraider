@@ -168,15 +168,44 @@ Inspect all outbound probes directly in your interception proxy:
   .\idoraider.exe -u https://api.target.com -t templates/ --token "TOKEN_A" --secondary-token "TOKEN_B" -x http://127.0.0.1:8080 -k
   ```
 
+#### Multi-Target Scanning via STDIN Pipe
+Pipe recon tools like `subfinder`, `httpx`, or a text file straight into IDORaider:
+
+* **Linux / macOS:**
+  ```bash
+  cat targets.txt | ./idoraider -t templates/ --only-vulnerable
+  ```
+* **Windows (PowerShell):**
+  ```powershell
+  Get-Content targets.txt | .\idoraider.exe -t templates/ --only-vulnerable
+  ```
+
+#### OpenAPI / Swagger 2.0 & 3.0 Auto-Scan
+Extract all parameterized API endpoints directly from an API specification without writing templates manually:
+
+```powershell
+.\idoraider.exe -u https://api.target.com --openapi https://api.target.com/swagger.json --ids 1-50
+```
+
+#### Numeric Range Expansion & Webhook Alerts
+Sweep ID ranges and receive instant alerts in Discord or Slack when a BOLA vulnerability is discovered:
+
+```powershell
+.\idoraider.exe -u https://api.target.com -t templates/ --ids 1-200 --webhook https://discord.com/api/webhooks/xxx/yyy --only-vulnerable
+```
+
 ---
 
 ## Key Capabilities
 
 * 🔒 **Owner-vs-Other Dual Token Replay**: Automatically proves authorization bypass with two test tokens.
-* 🚦 **Redirect Loop Protection**: Does not follow 302 redirects by default, preventing false-positive login pages from triggering alerts.
+* 📋 **STDIN Pipe Integration**: Easily pipe target lists from `httpx`, `subfinder`, or text files.
+* 📜 **OpenAPI / Swagger Auto-Importer**: Point to any Swagger 2.0 or OpenAPI 3.0 spec URL/file to auto-generate scan templates.
+* 🔢 **Numeric Range Expansion**: Seamlessly expand ranges like `--ids 1-500` alongside custom UUID lists.
+* 📢 **Webhook Notifications**: Real-time vulnerability push notifications to Discord, Slack, or generic HTTP collectors.
+* 🚦 **Smart 429 Rate-Limit Auto-Backoff**: Automatically respects `Retry-After` headers and retries safely without crashing scans.
 * 🛡️ **Burp Suite & ZAP Ready**: Route traffic through proxies with `-x` and ignore self-signed certificates with `-k`.
 * ⚡ **Zero External Dependencies**: Pure Go standard library. Easy build on Linux, macOS, and Windows.
-* 🎛️ **Runtime Candidate ID Override**: Inject target-specific UUIDs or numeric ranges on the fly using `--ids`.
 * ⏱️ **Rate Limiting & Delay**: Prevent WAF rate-limiting and account lockout with `-d / --delay`.
 * 📊 **Multi-Format Output**: Automatically generates both timestamped structured JSON and ready-to-report GitHub Flavored Markdown files.
 
@@ -228,8 +257,9 @@ PROGRESS   #     CODE   STATUS           SEVERITY     ENDPOINT                  
 
 | Flag | Default | Description |
 |---|---|---|
-| `-u`, `--url` | *(required)* | Target base URL (e.g. `https://api.target.com`) |
+| `-u`, `--url` | *(stdin or flag)* | Target base URL (e.g. `https://api.target.com`). Omit or pass `-` to read from STDIN |
 | `-t` | `templates/` | Directory containing YAML scan templates |
+| `--openapi`, `--swagger` | — | OpenAPI 2.0/3.0+ URL or local file to auto-generate scan templates |
 | `-c` | `20` | Concurrent worker routines |
 | `--token` | `$IDORAIDER_TOKEN` | Primary authentication token (owner account) |
 | `--secondary-token` | `$IDORAIDER_SECONDARY_TOKEN` | Secondary authentication token (attacker / lower-priv account) |
@@ -240,8 +270,10 @@ PROGRESS   #     CODE   STATUS           SEVERITY     ENDPOINT                  
 | `-k`, `--insecure` | `false` | Skip TLS certificate verification (useful for Burp Suite) |
 | `--follow-redirects` | `false` | Follow HTTP redirects (default false to prevent false positives) |
 | `-d`, `--delay` | `0s` | Delay between requests for rate limiting (e.g. `50ms`, `1s`) |
-| `--ids` | — | Comma-separated list of IDs to probe, overriding template defaults |
+| `--ids` | — | Candidate IDs or numeric ranges (e.g. `1-100` or `1,2,uuid-1`) |
 | `--timeout` | `10` | Per-request timeout in seconds |
+| `--webhook` | — | Discord, Slack, or generic webhook URL to receive scan alerts |
+| `--only-vulnerable` | `false` | Only print confirmed vulnerable findings in the terminal table |
 | `-o` | `results/` | Output directory for JSON and Markdown reports |
 | `--silent` | `false` | Only print vulnerable findings and final summary |
 | `--no-banner` | `false` | Suppress startup banner |

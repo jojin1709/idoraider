@@ -27,6 +27,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -371,6 +372,42 @@ func doRequest(ctx context.Context, client *http.Client, cfg Config, t *template
 	if err != nil {
 		return 0, "", err
 	}
+
+	// Smart 429 Rate-Limit Auto-Backoff (single retry on rate-limit)
+	if resp.StatusCode == http.StatusTooManyRequests {
+		retryAfter := resp.Header.Get("Retry-After")
+		backoff := 2 * time.Second
+		if retryAfter != "" {
+			if sec, parseErr := strconv.Atoi(retryAfter); parseErr == nil && sec > 0 && sec <= 10 {
+				backoff = time.Duration(sec) * time.Second
+			}
+		}
+		resp.Body.Close()
+
+		select {
+		case <-time.After(backoff):
+		case <-ctx.Done():
+			return http.StatusTooManyRequests, "", ctx.Err()
+		}
+
+		if body != "" {
+			bodyReader = strings.NewReader(body)
+		}
+		reqRetry, errRetry := http.NewRequestWithContext(ctx, t.Method, url, bodyReader)
+		if errRetry == nil {
+			reqRetry.Header = req.Header.Clone()
+			respRetry, errDo := client.Do(reqRetry)
+			if errDo == nil {
+				defer respRetry.Body.Close()
+				buf, errRead := io.ReadAll(io.LimitReader(respRetry.Body, 1<<20))
+				if errRead == nil {
+					return respRetry.StatusCode, string(buf), nil
+				}
+			}
+		}
+		return http.StatusTooManyRequests, "429 Too Many Requests (Rate Limited)", nil
+	}
+
 	defer resp.Body.Close()
 
 	buf, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20)) // cap at 1MB

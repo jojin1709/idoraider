@@ -8,24 +8,27 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/jojin1709/idoraider/internal/engine"
+	"github.com/jojin1709/idoraider/internal/openapi"
 	"github.com/jojin1709/idoraider/internal/report"
 	"github.com/jojin1709/idoraider/internal/template"
+	"github.com/jojin1709/idoraider/internal/webhook"
 )
 
 const version = "1.0.0"
 
-// ANSI colors — degrade gracefully (just shows codes) on terminals that
-// don't support them, which is acceptable for a v1 CLI tool.
+// ANSI colors
 const (
 	reset  = "\033[0m"
 	bold   = "\033[1m"
@@ -50,7 +53,7 @@ func (s *stringSlice) Set(val string) error {
 
 func main() {
 	var (
-		target          = flag.String("u", "", "Target base URL, e.g. https://target.com (required)")
+		target          = flag.String("u", "", "Target base URL, e.g. https://target.com")
 		urlAlias        = flag.String("url", "", "Alias for -u")
 		tmplDir         = flag.String("t", "templates/", "Directory of .yaml templates")
 		concurrent      = flag.Int("c", 20, "Concurrency (parallel workers)")
@@ -62,6 +65,7 @@ func main() {
 		outDir          = flag.String("o", "results/", "Directory to write reports into")
 		noBanner        = flag.Bool("no-banner", false, "Suppress the startup banner")
 		quiet           = flag.Bool("silent", false, "Only print vulnerable findings and the final summary")
+		onlyVuln        = flag.Bool("only-vulnerable", false, "Only print confirmed vulnerable findings in table")
 		proxy           = flag.String("x", "", "HTTP/HTTPS/SOCKS5 proxy, e.g. http://127.0.0.1:8080")
 		proxyAlias      = flag.String("proxy", "", "Alias for -x")
 		insecure        = flag.Bool("k", false, "Skip TLS certificate verification (useful with Burp Suite)")
@@ -69,7 +73,10 @@ func main() {
 		followRedirects = flag.Bool("follow-redirects", false, "Follow HTTP redirects (default false to prevent false positives)")
 		delay           = flag.Duration("d", 0, "Delay between requests, e.g. 100ms, 1s")
 		delayAlias      = flag.Duration("delay", 0, "Alias for -d")
-		idsFlag         = flag.String("ids", "", "Comma-separated list of IDs to probe, overriding template defaults (e.g. 1,2,3 or uuid1,uuid2)")
+		idsFlag         = flag.String("ids", "", "Candidate IDs or ranges (e.g. 1-100 or 1,2,uuid-1)")
+		openapiFlag     = flag.String("openapi", "", "OpenAPI / Swagger spec URL or file to auto-generate scan templates")
+		swaggerFlag     = flag.String("swagger", "", "Alias for --openapi")
+		webhookURL      = flag.String("webhook", os.Getenv("IDORAIDER_WEBHOOK"), "Discord, Slack, or generic webhook URL to receive scan alerts")
 		headersFlag     stringSlice
 	)
 	flag.Var(&headersFlag, "H", "Custom request header (format 'Key: Value'), repeatable")
@@ -88,47 +95,74 @@ func main() {
 	if *delay == 0 && *delayAlias != 0 {
 		*delay = *delayAlias
 	}
-
-	if *target == "" {
-		fmt.Fprintln(os.Stderr, red+"error:"+reset+" -u/--url target is required")
-		flag.Usage()
-		os.Exit(2)
-	}
-	*target = strings.TrimRight(*target, "/")
-	if !strings.HasPrefix(*target, "http://") && !strings.HasPrefix(*target, "https://") {
-		*target = "https://" + *target
+	if *openapiFlag == "" && *swaggerFlag != "" {
+		*openapiFlag = *swaggerFlag
 	}
 
-	if !*noBanner {
-		printBanner(*target, *tmplDir, *concurrent, *proxy)
-	}
-
-	templates, err := template.LoadDir(*tmplDir)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, red+"error loading templates: "+reset+err.Error())
-		os.Exit(1)
-	}
-	if len(templates) == 0 {
-		fmt.Fprintln(os.Stderr, yellow+"no templates found in "+*tmplDir+reset)
-		os.Exit(1)
-	}
-
-	var customIDs []string
-	if *idsFlag != "" {
-		for _, part := range strings.Split(*idsFlag, ",") {
-			part = strings.TrimSpace(part)
-			if part != "" {
-				customIDs = append(customIDs, part)
+	// 1. Gather Target(s): Flag or STDIN Pipe
+	var targets []string
+	if *target != "" && *target != "-" {
+		targets = append(targets, normalizeTarget(*target))
+	} else {
+		// Check if STDIN is piped
+		stat, err := os.Stdin.Stat()
+		if err == nil && (stat.Mode()&os.ModeCharDevice) == 0 {
+			scanner := bufio.NewScanner(os.Stdin)
+			for scanner.Scan() {
+				line := strings.TrimSpace(scanner.Text())
+				if line != "" && !strings.HasPrefix(line, "#") {
+					targets = append(targets, normalizeTarget(line))
+				}
 			}
 		}
 	}
 
-	totalProbes := 0
+	if len(targets) == 0 {
+		fmt.Fprintln(os.Stderr, red+"error:"+reset+" -u/--url target or piped STDIN is required")
+		flag.Usage()
+		os.Exit(2)
+	}
+
+	if !*noBanner {
+		printBanner(targets[0], *tmplDir, *concurrent, *proxy)
+	}
+
+	// 2. Load Templates: YAML Directory and/or OpenAPI Schema
+	var templates []*template.Template
+	if *openapiFlag != "" {
+		log("INF", fmt.Sprintf("Importing endpoints from OpenAPI spec: %s", *openapiFlag))
+		oTemplates, err := openapi.Load(context.Background(), *openapiFlag)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, red+"error loading openapi spec: "+reset+err.Error())
+			os.Exit(1)
+		}
+		templates = append(templates, oTemplates...)
+		log("INF", fmt.Sprintf("Generated %d templates from OpenAPI spec", len(oTemplates)))
+	}
+
+	if *tmplDir != "" && len(templates) == 0 {
+		tList, err := template.LoadDir(*tmplDir)
+		if err != nil && *openapiFlag == "" {
+			fmt.Fprintln(os.Stderr, red+"error loading templates: "+reset+err.Error())
+			os.Exit(1)
+		}
+		templates = append(templates, tList...)
+	}
+
+	if len(templates) == 0 {
+		fmt.Fprintln(os.Stderr, yellow+"no scan templates found"+reset)
+		os.Exit(1)
+	}
+
+	// 3. Parse candidate IDs (support numeric ranges e.g. 1-100)
+	customIDs := parseCandidateIDs(*idsFlag)
+
+	totalProbesPerTarget := 0
 	for _, t := range templates {
 		if len(customIDs) > 0 {
-			totalProbes += len(customIDs)
+			totalProbesPerTarget += len(customIDs)
 		} else {
-			totalProbes += len(t.IDs)
+			totalProbesPerTarget += len(t.IDs)
 		}
 	}
 
@@ -142,8 +176,8 @@ func main() {
 		}
 	}
 
-	log("INF", fmt.Sprintf("Loaded %d YAML templates from %s", len(templates), *tmplDir))
-	log("INF", fmt.Sprintf("Target: %s", *target))
+	log("INF", fmt.Sprintf("Loaded %d scan templates", len(templates)))
+	log("INF", fmt.Sprintf("Target count: %d", len(targets)))
 	log("INF", fmt.Sprintf("Concurrency: %d workers", *concurrent))
 	if *token == "" && *secToken == "" {
 		log("WRN", "No auth token provided (--token). Probing endpoints without authentication.")
@@ -158,63 +192,121 @@ func main() {
 		log("INF", fmt.Sprintf("Request delay: %s", *delay))
 	}
 	if len(customIDs) > 0 {
-		log("INF", fmt.Sprintf("Custom IDs override: %v", customIDs))
+		log("INF", fmt.Sprintf("Custom IDs override: %d candidate IDs loaded", len(customIDs)))
 	}
 	log("INF", "Beginning scan...")
 	fmt.Println()
 
-	cfg := engine.Config{
-		TargetBaseURL:   *target,
-		PrimaryToken:    *token,
-		SecondaryToken:  *secToken,
-		AuthHeader:      *authHeader,
-		AuthScheme:      *authScheme,
-		Concurrency:     *concurrent,
-		Timeout:         time.Duration(*timeoutSec) * time.Second,
-		ExtraHeaders:    extraHeaders,
-		ProxyURL:        *proxy,
-		InsecureTLS:     *insecure,
-		FollowRedirects: *followRedirects,
-		Delay:           *delay,
-		CustomIDs:       customIDs,
-	}
+	var overallVulnerable int
 
-	var (
-		mu   sync.Mutex
-		done int
-	)
-	printHeader()
-	sum := engine.Run(context.Background(), cfg, templates, func(r engine.Result) {
-		mu.Lock()
-		done++
-		cur := done
-		if !*quiet || r.Status == engine.StatusVulnerable {
-			printResult(cur, totalProbes, r)
+	for tIdx, curTarget := range targets {
+		if len(targets) > 1 {
+			fmt.Printf("\n%s[%d/%d] Scanning target: %s%s\n", cyan+bold, tIdx+1, len(targets), curTarget, reset)
 		}
-		mu.Unlock()
-	})
 
-	fmt.Println()
-	if err := os.MkdirAll(*outDir, 0o755); err != nil {
-		fmt.Fprintln(os.Stderr, red+"error creating output dir: "+reset+err.Error())
-		os.Exit(1)
+		cfg := engine.Config{
+			TargetBaseURL:   curTarget,
+			PrimaryToken:    *token,
+			SecondaryToken:  *secToken,
+			AuthHeader:      *authHeader,
+			AuthScheme:      *authScheme,
+			Concurrency:     *concurrent,
+			Timeout:         time.Duration(*timeoutSec) * time.Second,
+			ExtraHeaders:    extraHeaders,
+			ProxyURL:        *proxy,
+			InsecureTLS:     *insecure,
+			FollowRedirects: *followRedirects,
+			Delay:           *delay,
+			CustomIDs:       customIDs,
+		}
+
+		var (
+			mu   sync.Mutex
+			done int
+		)
+		printHeader()
+		sum := engine.Run(context.Background(), cfg, templates, func(r engine.Result) {
+			mu.Lock()
+			done++
+			cur := done
+			shouldPrint := true
+			if *quiet || *onlyVuln {
+				shouldPrint = (r.Status == engine.StatusVulnerable)
+			}
+			if shouldPrint {
+				printResult(cur, totalProbesPerTarget, r)
+			}
+			mu.Unlock()
+		})
+
+		fmt.Println()
+		if err := os.MkdirAll(*outDir, 0o755); err != nil {
+			fmt.Fprintln(os.Stderr, red+"error creating output dir: "+reset+err.Error())
+			os.Exit(1)
+		}
+		baseName := time.Now().Format("2006-01-02_150405")
+		jsonPath := filepath.Join(*outDir, fmt.Sprintf("%s.json", baseName))
+		mdPath := filepath.Join(*outDir, fmt.Sprintf("%s.md", baseName))
+
+		_ = report.WriteJSON(jsonPath, sum)
+		_ = report.WriteMarkdown(mdPath, sum)
+
+		printSummary(sum, jsonPath, mdPath)
+
+		if sum.Vulnerable > 0 {
+			overallVulnerable += sum.Vulnerable
+		}
+
+		// Webhook Alert delivery
+		if *webhookURL != "" {
+			if err := webhook.Send(context.Background(), *webhookURL, sum); err != nil {
+				fmt.Fprintln(os.Stderr, yellow+"warning: sending webhook: "+reset+err.Error())
+			} else {
+				log("INF", "Webhook delivered successfully.")
+			}
+		}
 	}
-	baseName := time.Now().Format("2006-01-02_150405")
-	jsonPath := filepath.Join(*outDir, fmt.Sprintf("%s.json", baseName))
-	mdPath := filepath.Join(*outDir, fmt.Sprintf("%s.md", baseName))
 
-	if err := report.WriteJSON(jsonPath, sum); err != nil {
-		fmt.Fprintln(os.Stderr, red+"error writing json report: "+reset+err.Error())
-	}
-	if err := report.WriteMarkdown(mdPath, sum); err != nil {
-		fmt.Fprintln(os.Stderr, red+"error writing markdown report: "+reset+err.Error())
-	}
-
-	printSummary(sum, jsonPath, mdPath)
-
-	if sum.Vulnerable > 0 {
+	if overallVulnerable > 0 {
 		os.Exit(3) // non-zero exit so CI pipelines can fail the build on findings
 	}
+}
+
+func normalizeTarget(t string) string {
+	t = strings.TrimRight(strings.TrimSpace(t), "/")
+	if !strings.HasPrefix(t, "http://") && !strings.HasPrefix(t, "https://") {
+		t = "https://" + t
+	}
+	return t
+}
+
+func parseCandidateIDs(raw string) []string {
+	var ids []string
+	if raw == "" {
+		return ids
+	}
+	for _, part := range strings.Split(raw, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		// Check for integer range: "1-100"
+		if strings.Contains(part, "-") {
+			dashIdx := strings.Index(part, "-")
+			startStr := part[:dashIdx]
+			endStr := part[dashIdx+1:]
+			start, err1 := strconv.Atoi(startStr)
+			end, err2 := strconv.Atoi(endStr)
+			if err1 == nil && err2 == nil && start <= end && (end-start) <= 10000 {
+				for i := start; i <= end; i++ {
+					ids = append(ids, strconv.Itoa(i))
+				}
+				continue
+			}
+		}
+		ids = append(ids, part)
+	}
+	return ids
 }
 
 func printBanner(target, tmplDir string, concurrency int, proxy string) {
@@ -232,7 +324,7 @@ func printBanner(target, tmplDir string, concurrency int, proxy string) {
 	fmt.Printf("  %-12s: Jojin John\n", "Author")
 	fmt.Printf("  %-12s: Go\n", "Language")
 	fmt.Printf("  %-12s: Find IDOR / BOLA vulnerabilities\n", "Purpose")
-	fmt.Printf("  %-12s: Template-based scanning\n", "Mode")
+	fmt.Printf("  %-12s: Template & OpenAPI scanning\n", "Mode")
 	fmt.Printf("  %-12s: %s\n", "Target", target)
 	fmt.Printf("  %-12s: %s\n", "Templates", tmplDir)
 	fmt.Printf("  %-12s: %d\n", "Concurrency", concurrency)
