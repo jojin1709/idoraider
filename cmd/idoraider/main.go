@@ -26,10 +26,10 @@ import (
 	"github.com/jojin1709/idoraider/internal/webhook"
 )
 
-const version = "1.0.0"
+const version = "1.1.0"
 
 // ANSI colors
-const (
+var (
 	reset  = "\033[0m"
 	bold   = "\033[1m"
 	dim    = "\033[2m"
@@ -39,6 +39,17 @@ const (
 	cyan   = "\033[36m"
 	grey   = "\033[90m"
 )
+
+func disableColors() {
+	reset = ""
+	bold = ""
+	dim = ""
+	red = ""
+	green = ""
+	yellow = ""
+	cyan = ""
+	grey = ""
+}
 
 type stringSlice []string
 
@@ -77,11 +88,23 @@ func main() {
 		openapiFlag     = flag.String("openapi", "", "OpenAPI / Swagger spec URL or file to auto-generate scan templates")
 		swaggerFlag     = flag.String("swagger", "", "Alias for --openapi")
 		webhookURL      = flag.String("webhook", os.Getenv("IDORAIDER_WEBHOOK"), "Discord, Slack, or generic webhook URL to receive scan alerts")
+		noColor         = flag.Bool("no-color", false, "Disable color output in terminal")
+		showVersion     = flag.Bool("version", false, "Print version and exit")
+		showVersionV    = flag.Bool("v", false, "Alias for -version")
 		headersFlag     stringSlice
 	)
 	flag.Var(&headersFlag, "H", "Custom request header (format 'Key: Value'), repeatable")
 	flag.Var(&headersFlag, "header", "Alias for -H")
 	flag.Parse()
+
+	if *showVersion || *showVersionV {
+		fmt.Printf("IDORaider v%s - High-performance BOLA/IDOR vulnerability scanner\nAuthor: JOJIN JOHN (@jojin1709)\nhttps://github.com/jojin1709/idoraider\n", version)
+		os.Exit(0)
+	}
+
+	if *noColor || os.Getenv("NO_COLOR") != "" {
+		disableColors()
+	}
 
 	if *target == "" && *urlAlias != "" {
 		*target = *urlAlias

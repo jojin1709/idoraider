@@ -72,3 +72,4 @@ func TestLoad_RemoteURL(t *testing.T) {
 		t.Errorf("expected '/orders/{id}', got %q", templates[0].Path)
 	}
 }
+

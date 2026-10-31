@@ -109,3 +109,4 @@ func readSource(ctx context.Context, src string) ([]byte, error) {
 	// Local file
 	return os.ReadFile(src)
 }
+

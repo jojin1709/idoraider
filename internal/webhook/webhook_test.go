@@ -40,3 +40,4 @@ func TestSend_Empty(t *testing.T) {
 		t.Errorf("expected nil error for empty webhook url, got: %v", err)
 	}
 }
+

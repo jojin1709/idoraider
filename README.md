@@ -276,7 +276,9 @@ PROGRESS   #     CODE   STATUS           SEVERITY     ENDPOINT                  
 | `--only-vulnerable` | `false` | Only print confirmed vulnerable findings in the terminal table |
 | `-o` | `results/` | Output directory for JSON and Markdown reports |
 | `--silent` | `false` | Only print vulnerable findings and final summary |
+| `--no-color` | `false` | Disable color output in terminal (honors `$NO_COLOR`) |
 | `--no-banner` | `false` | Suppress startup banner |
+| `-v`, `--version` | `false` | Print version and exit |
 
 > [!TIP]
 > **CI/CD Integration:** IDORaider exits with code `3` if any vulnerability is detected, and `0` when clean, making it simple to break builds on authorization regressions.

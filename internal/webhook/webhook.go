@@ -112,3 +112,4 @@ func buildSlackPayload(sum engine.Summary) ([]byte, error) {
 	}
 	return json.Marshal(payload)
 }
+
