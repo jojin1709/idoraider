@@ -1,0 +1,7 @@
+.git
+dist/
+release/
+results/
+*.exe
+*.log
+docs/

@@ -1,0 +1,22 @@
+id: idor-delete
+name: Unauthorized Object Deletion
+severity: critical
+description: Resource deletion accessible to unauthorized users or lower privilege accounts
+method: DELETE
+path: /api/v1/items/{id}
+headers:
+  Authorization: Bearer {token}
+ids:
+  - 1
+  - 2
+  - 10
+match_status:
+  - 200
+  - 204
+match_not_status:
+  - 401
+  - 403
+  - 404
+match_words:
+  - deleted
+  - success

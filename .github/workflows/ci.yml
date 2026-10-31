@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+          cache: false
+
+      - name: Verify zero external dependencies
+        shell: bash
+        run: |
+          go mod verify
+          # Confirm only stdlib is used (no external requires in go.mod)
+          if grep -E "^require " go.mod; then
+            echo "Error: External dependencies detected in go.mod. IDORaider must remain stdlib-only."
+            exit 1
+          fi
+
+      - name: Run unit tests
+        run: go test -v -race ./...
+        if: matrix.os != 'windows-latest'
+
+      - name: Run unit tests (Windows)
+        run: go test -v ./...
+        if: matrix.os == 'windows-latest'
+
+      - name: Build IDORaider binary
+        run: go build -v -o idoraider-bin ./cmd/idoraider
+
+      - name: Build IDORaider Lab binary
+        run: go build -v -o lab-bin ./cmd/idoraider-lab

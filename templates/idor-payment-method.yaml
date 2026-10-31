@@ -1,0 +1,23 @@
+id: idor-payment-method
+name: Saved Payment Method & Wallet Exposure
+severity: critical
+description: Customer credit card, bank details, or saved payment wallet readable by ID
+method: GET
+path: /api/v1/customers/{id}/payment-methods
+headers:
+  Authorization: Bearer {token}
+ids:
+  - 1
+  - 2
+  - 42
+match_status:
+  - 200
+match_not_status:
+  - 401
+  - 403
+  - 404
+match_words:
+  - card
+  - last4
+  - wallet
+  - exp

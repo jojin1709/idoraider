@@ -6,6 +6,7 @@
 
 <p align="center">
   <a href="https://jojin1709.github.io/idoraider/"><img src="https://img.shields.io/badge/Docs-Interactive%20Website-00f5a0.svg?style=for-the-badge&logo=googlechrome&logoColor=black" alt="Documentation Website"></a>
+  <a href="https://github.com/jojin1709/idoraider/actions"><img src="https://img.shields.io/github/actions/workflow/status/jojin1709/idoraider/ci.yml?branch=main&style=for-the-badge&label=CI&logo=githubactions&logoColor=white" alt="CI Status"></a>
   <a href="https://golang.org/"><img src="https://img.shields.io/badge/Language-Go%201.22+-00ADD8.svg?style=for-the-badge&logo=go" alt="Go 1.22+"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/Dependencies-Zero%20(Stdlib)-success.svg?style=for-the-badge" alt="Zero External Dependencies">
@@ -102,12 +103,34 @@ go build -o idoraider.exe ./cmd/idoraider
 ```
 *(Or simply run `.\build.bat` or `.\build.ps1`)*
 
+#### Docker
+```bash
+docker build -t idoraider .
+docker run --rm idoraider -u https://api.target.com -t /templates/
+```
+
 > [!IMPORTANT]
 > **Windows Note:** On Windows, always build with the `.exe` extension (`-o idoraider.exe`). If built without `.exe`, Windows will not recognize it as an executable and will show an "Open with..." dialog. To run it, use `.\idoraider.exe`.
 
 ---
 
-### 2. Usage Examples
+### 2. Practice Lab (Test Locally)
+
+IDORaider includes a self-contained mock vulnerable API for offline practice and verification:
+
+1. **Start the mock server:**
+   ```powershell
+   go run ./cmd/idoraider-lab
+   ```
+2. **In a second terminal, run IDORaider against it:**
+   ```powershell
+   .\idoraider.exe -u http://127.0.0.1:8888 -t templates/ --token "token_alice" --secondary-token "token_bob"
+   ```
+   *Watch IDORaider accurately identify BOLA leaks on `/api/v1/users/` and `/api/v1/invoices/`, while verifying `/api/v1/admin/` is properly restricted (403 Forbidden).*
+
+---
+
+### 3. Usage Examples
 
 #### Single-Token Mode (ID Enumeration)
 Test candidate IDs using your own authorized user token:
@@ -275,7 +298,7 @@ match_words:
 
 ### Included Starter Templates
 
-IDORaider comes pre-packaged with 10 templates covering high-impact attack surfaces:
+IDORaider comes pre-packaged with 14 templates covering high-impact attack surfaces:
 
 1. `idor-user-profile.yaml` — User profiles, emails, usernames
 2. `idor-admin.yaml` — Administrative control endpoints
@@ -287,6 +310,10 @@ IDORaider comes pre-packaged with 10 templates covering high-impact attack surfa
 8. `idor-team.yaml` — Team rosters & workspaces
 9. `idor-comment.yaml` — User comments & edit permissions
 10. `idor-report.yaml` — Internal generated analytics & exports
+11. `idor-uuid.yaml` — UUIDv4-based object identifier enumeration
+12. `idor-delete.yaml` — Unauthorized object deletion (DELETE method)
+13. `idor-password-reset.yaml` — Sensitive password reset token exposure
+14. `idor-payment-method.yaml` — Customer payment methods & wallet data
 
 ---
 

@@ -1,0 +1,21 @@
+id: idor-uuid
+name: UUID-Based Object Access
+severity: high
+description: Resource protected by UUID identifier accessible without ownership check
+method: GET
+path: /api/v1/resources/{id}
+headers:
+  Authorization: Bearer {token}
+ids:
+  - 00000000-0000-0000-0000-000000000001
+  - 11111111-1111-1111-1111-111111111111
+  - aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+match_status:
+  - 200
+match_not_status:
+  - 401
+  - 403
+  - 404
+match_words:
+  - id
+  - created_at
