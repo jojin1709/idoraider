@@ -45,6 +45,9 @@
   - [Included Starter Templates](#included-starter-templates)
 - [Architecture & Replay Flow](#architecture--replay-flow)
 - [Reporting](#reporting)
+- [Contributing](#contributing)
+- [Security Policy](#security-policy)
+- [Code of Conduct](#code-of-conduct)
 - [Developer](#developer)
 - [License](#license)
 
@@ -238,6 +241,20 @@ Reports are saved to `results/` after every run:
 
 1. **JSON Report (`results/*.json`)**: Full programmatic audit data with timestamps, HTTP status codes, request URLs, and exact vulnerability details.
 2. **Markdown Report (`results/*.md`)**: Clean GitHub Flavored Markdown summary with status badges and finding tables ready for pentest deliverables and bug bounty submissions.
+
+---
+
+## Contributing
+
+Contributions, template submissions, and feature suggestions are welcome! Please check out our [Contributing Guidelines](CONTRIBUTING.md) to get started.
+
+## Security Policy
+
+If you discover a security issue or vulnerability, please consult our [Security Policy](SECURITY.md) for responsible disclosure.
+
+## Code of Conduct
+
+This project is governed by the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
 
 ---
 
