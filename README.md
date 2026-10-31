@@ -76,46 +76,67 @@ Instead of relying on simple URL fuzzing, IDORaider adopts the methodology used 
 
 ## Quick Start
 
-### Installation
+### 1. Installation & Build
 
+Clone the repository and build the binary for your platform:
+
+#### Linux / macOS
 ```bash
-# Clone the repository
 git clone https://github.com/jojin1709/idoraider.git
 cd idoraider
-
-# Build the binary
 go build -o idoraider ./cmd/idoraider
 ```
 
-### Single-Token Mode (ID Enumeration)
-
-Test candidate IDs using your authenticated user token:
-
-```bash
-./idoraider -u https://api.target.com -t templates/ -c 20 \
-  --token "YOUR_PRIMARY_JWT_TOKEN"
+#### Windows (PowerShell / Command Prompt)
+```powershell
+git clone https://github.com/jojin1709/idoraider.git
+cd idoraider
+go build -o idoraider.exe ./cmd/idoraider
 ```
+*(Or simply run `.\build.bat` or `.\build.ps1`)*
 
-### Dual-Token Mode (Owner vs. Other — Recommended)
+> [!IMPORTANT]
+> **Windows Note:** On Windows, always build with the `.exe` extension (`-o idoraider.exe`). If built without `.exe`, Windows will not recognize it as an executable and will show an "Open with..." dialog. To run it, use `.\idoraider.exe`.
 
-The gold standard for BOLA testing. Supply two separate accounts you control:
+---
 
-```bash
-./idoraider -u https://api.target.com -t templates/ -c 20 \
-  --token "ACCOUNT_A_OWNER_TOKEN" \
-  --secondary-token "ACCOUNT_B_OTHER_TOKEN"
-```
+### 2. Usage Examples
 
-### Routing Through Burp Suite / OWASP ZAP
+#### Single-Token Mode (ID Enumeration)
+Test candidate IDs using your own authorized user token:
 
+* **Linux / macOS:**
+  ```bash
+  ./idoraider -u https://api.target.com -t templates/ -c 20 --token "YOUR_PRIMARY_JWT_TOKEN"
+  ```
+* **Windows (PowerShell):**
+  ```powershell
+  .\idoraider.exe -u https://api.target.com -t templates/ -c 20 --token "YOUR_PRIMARY_JWT_TOKEN"
+  ```
+
+#### Dual-Token Mode (Owner vs. Other — Recommended)
+The gold standard for BOLA testing. Supply two separate test accounts you control:
+
+* **Linux / macOS:**
+  ```bash
+  ./idoraider -u https://api.target.com -t templates/ -c 20 --token "ACCOUNT_A_OWNER_TOKEN" --secondary-token "ACCOUNT_B_OTHER_TOKEN"
+  ```
+* **Windows (PowerShell):**
+  ```powershell
+  .\idoraider.exe -u https://api.target.com -t templates/ -c 20 --token "ACCOUNT_A_OWNER_TOKEN" --secondary-token "ACCOUNT_B_OTHER_TOKEN"
+  ```
+
+#### Routing Through Burp Suite / OWASP ZAP
 Inspect all outbound probes directly in your interception proxy:
 
-```bash
-./idoraider -u https://api.target.com -t templates/ \
-  --token "ACCOUNT_A_TOKEN" \
-  --secondary-token "ACCOUNT_B_TOKEN" \
-  -x http://127.0.0.1:8080 -k
-```
+* **Linux / macOS:**
+  ```bash
+  ./idoraider -u https://api.target.com -t templates/ --token "TOKEN_A" --secondary-token "TOKEN_B" -x http://127.0.0.1:8080 -k
+  ```
+* **Windows (PowerShell):**
+  ```powershell
+  .\idoraider.exe -u https://api.target.com -t templates/ --token "TOKEN_A" --secondary-token "TOKEN_B" -x http://127.0.0.1:8080 -k
+  ```
 
 ---
 
